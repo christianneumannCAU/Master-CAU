@@ -7,8 +7,14 @@ In this project we do some cool stuff for Christians master thesis<br>
 ## Author
 Developed by [Christian Neumann](neumann@psychologie.uni-kiel.de) & [Julius Welzel](j.welzel@neurologie.uni-kiel.de) <br>
 Supervised by Julian Keil <br>
+<br>
+__Contact at Alpha Omega:__<br>
+M.Sc. Eng Ahmad Liqreina<br>
+Senior lead support engineer<br>
++49 7251 4406621 or  (0) 174 1710904
 
 ## Folder structure
+* 00_general_info *(infromation regarding the thesis)*
 * 01_literature *(related papers & presentations)*
 
 ## Versioning
