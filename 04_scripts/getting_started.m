@@ -13,8 +13,10 @@ ft_defaults;
 set(0,'defaultfigurecolor',[1 1 1]);
 
 % Go to Current Folder
-cd ('C:\Users\acer\Desktop\Master\Masterarbeit\converted_data\Andreas_Arndt')
+PATHIN_conv = [MAIN '02_Data' filesep '01_converteddata' filesep 'Andreas_Arndt' filesep];
+cd ([PATHIN_conv])
 indat = dir('*.mat');
+DEPTH = extractBetween({indat.name},'D','F'); % Depth is a cell array containing all depth in one participant folder
 
 
 %% read in the data
