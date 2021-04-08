@@ -26,8 +26,3 @@ for v = 1:length(indat)
     nd(v).anterior.data = data(v).name.CLFP_02___Anterior;
     nd(v).posterior = data(v).name.CLFP_01___Posterior;
 end
-%%
-v = 1
-data = importdata(indat(v).name);
-data.depth = extractBetween(indat(v).name,'D','F');
-
