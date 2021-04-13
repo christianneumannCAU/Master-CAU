@@ -6,7 +6,7 @@ clc;
 MAIN = [fileparts(pwd) '\'];
 addpath(genpath(MAIN));
 addpath([userpath '\toolboxes\eeglab_current\']);
-addpath([userpath '\toolboxes\fieldtrip-20190611\']);
+addpath(genpath([userpath '\toolboxes\fieldtrip-20210411\']));
 ft_defaults;
 
 %Change MatLab defaults
@@ -19,6 +19,6 @@ indat = dir('*.mat');
 DEPTH = extractBetween({indat.name},'D','F'); % Depth is a cell array containing all depth in one participant folder
 
 %% read in the data
-cfg = []
-cfg.dataset = [PATHIN_conv indat(1).name]
-data = ft_preprocessing(cfg)
+cfg = [];
+cfg.dataset = [PATHIN_conv indat(1).name];
+data = ft_preprocessing(cfg);
