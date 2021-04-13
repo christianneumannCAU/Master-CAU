@@ -18,11 +18,8 @@ cd ([PATHIN_conv])
 indat = dir('*.mat');
 DEPTH = extractBetween({indat.name},'D','F'); % Depth is a cell array containing all depth in one participant folder
 
-
 %% read in the data
 for v = 1:length(indat)
-    data(v).name = load(indat(v).name);
-    nd(v).central.data = data(v).name.CLFP_01___Central;
-    nd(v).anterior.data = data(v).name.CLFP_02___Anterior;
-    nd(v).posterior = data(v).name.CLFP_01___Posterior;
+    cfg = [];
+    cfg.hdr = ft_read_header({indat.name});
 end
