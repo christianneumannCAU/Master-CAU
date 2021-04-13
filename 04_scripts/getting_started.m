@@ -20,4 +20,5 @@ DEPTH = extractBetween({indat.name},'D','F'); % Depth is a cell array containing
 
 %% read in the data
 cfg = []
-ft_preprocessing(cfg, [PATHIN_conv indat(1).name])
+cfg.dataset = [PATHIN_conv indat(1).name]
+data = ft_preprocessing(cfg)
