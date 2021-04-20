@@ -38,8 +38,8 @@ data = ft_preprocessing(cfg);
     cfg.method='mtmconvol'; 
     cfg.output='pow'; % Output parameter
     cfg.foi=[1:2:30]; % Frequency resolution
-    cfg.toi=[-.5:.01: .5]; % Temporal resolution
-    cfg.t_ftimwin = 7./cfg.foi;
+    cfg.toi=[0:.01: 5]; % Temporal resolution
+    cfg.t_ftimwin = 3./cfg.foi;
     cfg.taper = 'hanning'; % Frequency-Adaptive Smoothing
 
     TFR1=ft_freqanalysis(cfg,data);
@@ -49,8 +49,8 @@ data = ft_preprocessing(cfg);
     cfg.method='wavelet'; % Method: Wavelet Transformation
     cfg.output='pow'; % Output parameter
     cfg.foi=[1:2:30]; % Frequency resolution
-    cfg.toi=[-.5:.01: .5]; % Temporal resolution
-    cfg.width = 7;
+    cfg.toi=[0:.01: 5]; % Temporal resolution
+    cfg.width = 3;
     TFR2 = ft_freqanalysis(cfg,data);
     
 %% plots
