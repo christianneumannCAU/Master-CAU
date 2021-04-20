@@ -80,5 +80,25 @@ for v = 1:101
 end
 
 
+%% TF plots
+subplot(2,1,1)
 
+% FFT
+imagesc(TFR1.time,TFR1.freq,squeeze(TFR1.powspctrm(1,:,:)));
+    % legend
+    title 'FFT (Hanning) TFR'
+    xlabel 'Time [s]';
+    ylabel 'Frequency [Hz]';
+    cb = colorbar;
+    cb.Label.String = 'Power [?] :)';
+    
+% Wavelets
+subplot(2,1,2)
+imagesc(TFR2.time,TFR2.freq,squeeze(TFR2.powspctrm(1,:,:)));
+    % legend
+    title 'Wavelet TFR'
+    xlabel 'Time [s]';
+    ylabel 'Frequency [Hz]';
+    cb = colorbar;
+    cb.Label.String = 'Power [?] :)';
 
