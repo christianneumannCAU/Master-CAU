@@ -62,23 +62,10 @@ plot(data.time{1,1},data.trial{1,1});
 m1 = mean(TFR1.powspctrm,[3],'omitnan'); 
 plot(TFR1.freq,m1);
 
-% watch specific timesamples
-for v = 1:101
-    subplot(10,11,v);
-    plot(TFR1.freq,TFR1.powspctrm(:,:,v));
-end
-
 %% for Option 2
 % avarage over all timesamples;
 m2 = mean(TFR2.powspctrm,[3],'omitnan'); 
 plot(TFR2.freq,m2);
-
-% watch specific timesamples
-for v = 1:101
-    subplot(10,11,v);
-    plot(TFR2.freq,TFR2.powspctrm(:,:,v));
-end
-
 
 %% TF plots
 subplot(2,1,1)
