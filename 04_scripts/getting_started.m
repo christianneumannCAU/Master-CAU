@@ -39,7 +39,7 @@ data = ft_preprocessing(cfg);
     cfg.output='pow'; % Output parameter
     cfg.foi=[1:2:30]; % Frequency resolution
     cfg.toi=[0:.01: 5]; % Temporal resolution
-    cfg.t_ftimwin = 3./cfg.foi;
+    cfg.t_ftimwin = 5./cfg.foi;
     cfg.taper = 'hanning'; % Frequency-Adaptive Smoothing
 
     TFR1=ft_freqanalysis(cfg,data);
@@ -50,7 +50,7 @@ data = ft_preprocessing(cfg);
     cfg.output='pow'; % Output parameter
     cfg.foi=[1:2:30]; % Frequency resolution
     cfg.toi=[0:.01: 5]; % Temporal resolution
-    cfg.width = 3;
+    cfg.width = 6;
     TFR2 = ft_freqanalysis(cfg,data);
     
 %% plots
