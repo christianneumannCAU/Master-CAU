@@ -70,18 +70,28 @@ plot(spikes_raw.time{1,1}(1:200),spikes_raw.trial{1,1}(1:200));
     
 %% plots
 %raw data
-plot(data.time{1,1},data.trial{1,1});
+% plot(data.time{1,1},data.trial{1,1});
 
-%% for Option 1
+% for Option 1
 % avarage over all timesamples;
+subplot(2,1,1)
 m1 = mean(TFR1.powspctrm,[3],'omitnan'); 
 plot(TFR1.freq,m1);
-
-%% for Option 2
+    title 'powerspectrum FFT (Hanning)';
+    xlabel 'Time';
+    ylabel 'Frequency [Hz]';
+    lgd = legend('Central','Anterior');
+    lgd.NumColumns = 2
+% for Option 2
 % avarage over all timesamples;
+subplot(2,1,2)
 m2 = mean(TFR2.powspctrm,[3],'omitnan'); 
 plot(TFR2.freq,m2);
-
+    title 'powerspectrum wavelet';
+    xlabel 'Time';
+    ylabel 'Frequency [Hz]';
+    lgd = legend('Central','Anterior');
+    lgd.NumColumns = 2
 %% TF plots
 subplot(2,1,1)
 
