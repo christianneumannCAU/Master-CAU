@@ -33,6 +33,21 @@ cfg.lpfilttype = 'firws';
 cfg.dataset = [PATHIN_conv indat(1).name];
 data = ft_preprocessing(cfg);
 
+%% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
+cfg = [];
+cfg.bpfilter = 'yes';
+cfg.bpfreq = [300 3000];
+cfg.bpfilttype = 'firws';
+cfg.dataset = [PATHIN_conv indat(1).name];
+spikes_raw = ft_preprocessing(cfg);
+
+% für den ersten Channel
+plot(spikes_raw.time{1,1}(1,:),spikes_raw.trial{1,1}(1,:))
+threshold = (median(abs(spikes_raw.trial{1,1}(1,:))))/0.6745;
+spike_time = spike_detection(spikes_raw.trial{1,1}(1,:),threshold);
+plot(spikes_raw.time{1,1}(1:200),spikes_raw.trial{1,1}(1:200));
+
+
 %% Option 1: FFT, Hanning taper
     cfg=[];
     cfg.method='mtmconvol'; 
