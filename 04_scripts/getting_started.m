@@ -33,6 +33,9 @@ cfg.lpfilttype = 'firws';
 cfg.dataset = [PATHIN_conv indat(1).name];
 data = ft_preprocessing(cfg);
 
+%% Plotting raw data
+% plot(data.time{1,1},data.trial{1,1});
+
 %% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
 cfg = [];
 cfg.bpfilter = 'yes';
@@ -42,61 +45,74 @@ cfg.dataset = [PATHIN_conv indat(1).name];
 spikes_raw = ft_preprocessing(cfg);
 
 % für den ersten Channel
-plot(spikes_raw.time{1,1}(1,:),spikes_raw.trial{1,1}(1,:))
 threshold = (median(abs(spikes_raw.trial{1,1}(1,:))))/0.6745;
 spike_time = spike_detection(spikes_raw.trial{1,1}(1,:),threshold);
-plot(spikes_raw.time{1,1}(1:200),spikes_raw.trial{1,1}(1:200));
+
+figure; hold;
+plot(spikes_raw.time{1,1}(1,:),spikes_raw.trial{1,1}(1,:));
+plot(spikes_raw.time{1,1}(spike_time),0,'*');
 
 
 %% Option 1: FFT, Hanning taper
+% Calculating multiple FFTs for a different number of Cycles (3 to 7)
+
+x = 1
+for v = 3:7 
     cfg=[];
     cfg.method='mtmconvol'; 
     cfg.output='pow'; % Output parameter
-    cfg.foi=[1:2:30]; % Frequency resolution
+    cfg.foi=[1:.05:30]; % Frequency resolution
     cfg.toi=[0:.01: 5]; % Temporal resolution
-    cfg.t_ftimwin = 5./cfg.foi;
+    cfg.t_ftimwin = v./cfg.foi;
     cfg.taper = 'hanning'; % Frequency-Adaptive Smoothing
+    TFR1(x)=ft_freqanalysis(cfg,data);
+    x = x+1;
+end
 
-    TFR1=ft_freqanalysis(cfg,data);
+%% Plotting Option 1
+for v = 1:5
+    subplot(5,1,v)
+    m = mean(TFR1(v).powspctrm,[3],'omitnan'); 
+    plot(TFR1(v).freq,m);
+    title 'powerspectrum FFT (Hanning)';
+    xlabel 'Frequency [Hz]';
+    ylabel 'Power';
+    lgd = legend('Central','Anterior');
+    lgd.NumColumns = 2
+end
 
 %% Option 2: Wavelet
+% Calculating multiple FFTs for a different number of Cycles (3 to 7)
+
+x = 1
+for v = 3:7
     cfg=[];
     cfg.method='wavelet'; % Method: Wavelet Transformation
     cfg.output='pow'; % Output parameter
-    cfg.foi=[1:2:30]; % Frequency resolution
+    cfg.foilim=[1 30]; % Frequency resolution
     cfg.toi=[0:.01: 5]; % Temporal resolution
-    cfg.width = 6;
-    TFR2 = ft_freqanalysis(cfg,data);
-    
-%% plots
-%raw data
-% plot(data.time{1,1},data.trial{1,1});
+    cfg.width = v;
+    TFR2(x) = ft_freqanalysis(cfg,data);
+    x = x+1;
+end
 
-% for Option 1
-% avarage over all timesamples;
-subplot(2,1,1)
-m1 = mean(TFR1.powspctrm,[3],'omitnan'); 
-plot(TFR1.freq,m1);
+%% Plotting Option 2
+for v = 1:5
+    subplot(5,1,v)
+    m = mean(TFR2(v).powspctrm,[3],'omitnan'); 
+    plot(TFR2(v).freq,m);
     title 'powerspectrum FFT (Hanning)';
-    xlabel 'Time';
-    ylabel 'Frequency [Hz]';
+    xlabel 'Frequency [Hz]';
+    ylabel 'Power';
     lgd = legend('Central','Anterior');
     lgd.NumColumns = 2
-% for Option 2
-% avarage over all timesamples;
-subplot(2,1,2)
-m2 = mean(TFR2.powspctrm,[3],'omitnan'); 
-plot(TFR2.freq,m2);
-    title 'powerspectrum wavelet';
-    xlabel 'Time';
-    ylabel 'Frequency [Hz]';
-    lgd = legend('Central','Anterior');
-    lgd.NumColumns = 2
+end
+
 %% TF plots
 subplot(2,1,1)
 
 % FFT
-imagesc(TFR1.time,TFR1.freq,squeeze(TFR1.powspctrm(1,:,:)));
+imagesc(TFR1(1).time,TFR1(1).freq,squeeze(TFR1(1).powspctrm(1,:,:)));
     % legend
     title 'FFT (Hanning) TFR'
     xlabel 'Time [s]';
@@ -106,11 +122,10 @@ imagesc(TFR1.time,TFR1.freq,squeeze(TFR1.powspctrm(1,:,:)));
     
 % Wavelets
 subplot(2,1,2)
-imagesc(TFR2.time,TFR2.freq,squeeze(TFR2.powspctrm(1,:,:)));
+imagesc(TFR2(1).time,TFR2(1).freq,squeeze(TFR2(1).powspctrm(1,:,:)));
     % legend
     title 'Wavelet TFR'
     xlabel 'Time [s]';
     ylabel 'Frequency [Hz]';
     cb = colorbar;
     cb.Label.String = 'Power [?] :)';
-
