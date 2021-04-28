@@ -44,15 +44,15 @@ cfg.bpfilttype = 'firws';
 cfg.dataset = [PATHIN_conv indat(1).name];
 spikes_raw = ft_preprocessing(cfg);
 
-% für den ersten Channel
-threshold = (median(abs(spikes_raw.trial{1,1}(1,:))))/0.6745;
-spike_time = spike_detection(spikes_raw.trial{1,1}(1,:),threshold);
-
-figure; hold;
-plot(spikes_raw.time{1,1}(1,:),spikes_raw.trial{1,1}(1,:));
-plot(spikes_raw.time{1,1}(spike_time),0,'*');
-
-
+for v = 1:2
+    threshold = (median(abs(spikes_raw.trial{1,1}(v,:))))/0.6745;
+    spike_time = spike_detection(spikes_raw.trial{1,1}(v,:),threshold);
+    
+    figure; hold;
+    plot(spikes_raw.time{1,1},spikes_raw.trial{1,1}(v,:));
+    plot(spikes_raw.time{1,1}(spike_time),0,'*');
+end
+    
 %% Option 1: FFT, Hanning taper
 % Calculating multiple FFTs for a different number of Cycles (3 to 7)
 
@@ -70,15 +70,24 @@ for v = 3:7
 end
 
 %% Plotting Option 1
+n = 3; %number of Cycles
 for v = 1:5
-    subplot(5,1,v)
-    m = mean(TFR1(v).powspctrm,[3],'omitnan'); 
-    plot(TFR1(v).freq,m);
-    title 'powerspectrum FFT (Hanning)';
+    subplot(5,1,v);
+    m = mean(TFR1(v).powspctrm,[3],'omitnan'); %avarege over time
+    
+    %normalize data
+    for u = 1:2
+        norm_data(u,:) = (m(u,:)-min(m(u,:),[],'omitnan'))/(max(m(u,:),[],'omitnan')-min(m(u,:),[],'omitnan'));
+    end
+    
+    plot(TFR1(v).freq,norm_data);
+    str = ['powerspectrum FFT (Hanning)' ' ' num2str(n) ' ' 'Cycles'];
+    title(str) ;
     xlabel 'Frequency [Hz]';
     ylabel 'Power';
     lgd = legend('Central','Anterior');
-    lgd.NumColumns = 2
+    lgd.NumColumns = 2;
+    n = n+1;
 end
 
 %% Option 2: Wavelet
@@ -97,15 +106,24 @@ for v = 3:7
 end
 
 %% Plotting Option 2
+n = 3; %number of Cycles
 for v = 1:5
-    subplot(5,1,v)
-    m = mean(TFR2(v).powspctrm,[3],'omitnan'); 
-    plot(TFR2(v).freq,m);
-    title 'powerspectrum FFT (Hanning)';
+    subplot(5,1,v);
+    m = mean(TFR2(v).powspctrm,[3],'omitnan'); %avarege over time
+    
+    %normalize data
+    for u = 1:2
+        norm_data(u,:) = (m(u,:)-min(m(u,:),[],'omitnan'))/(max(m(u,:),[],'omitnan')-min(m(u,:),[],'omitnan'));
+    end
+    
+    plot(TFR2(v).freq,norm_data);
+    str = ['powerspectrum FFT (Wavelet)' ' ' num2str(n) ' ' 'Cycles'];
+    title(str) ;
     xlabel 'Frequency [Hz]';
     ylabel 'Power';
     lgd = legend('Central','Anterior');
-    lgd.NumColumns = 2
+    lgd.NumColumns = 2;
+    n = n+1;
 end
 
 %% TF plots
