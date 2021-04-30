@@ -56,7 +56,7 @@ end
 %% Option 1: FFT, Hanning taper
 % Calculating multiple FFTs for a different number of Cycles (3 to 7)
 
-x = 1
+x = 1;
 for v = 3:7 
     cfg=[];
     cfg.method='mtmconvol'; 
@@ -93,7 +93,7 @@ end
 %% Option 2: Wavelet
 % Calculating multiple FFTs for a different number of Cycles (3 to 7)
 
-x = 1
+x = 1;
 for v = 3:7
     cfg=[];
     cfg.method='wavelet'; % Method: Wavelet Transformation
