@@ -3,7 +3,7 @@ clear all;  %remove all variables from current workspace
 close all;  %close all plots
 clc;        %clear all text from command window 
 
-%add and initiate toolboxes
+%add toolboxes and initiate fieldtrip
 MAIN = [fileparts(pwd) '\'];
 addpath(genpath(MAIN));
 addpath([userpath '\toolboxes\eeglab_current\']);
@@ -30,7 +30,7 @@ cfg.hpfilttype = 'firws';
 cfg.lpfilter = 'yes';
 cfg.lpfreq = 45;                %low-pass filter, cutting everything over 45 Hz
 cfg.lpfilttype = 'firws';
-cfg.dataset = [PATHIN_conv indat(1).name];
+cfg.dataset = [PATHIN_conv indat(1).name]; %only the first file
 data = ft_preprocessing(cfg);
 
 %% Plotting raw data
@@ -44,10 +44,12 @@ cfg.bpfilttype = 'firws';
 cfg.dataset = [PATHIN_conv indat(1).name];
 spikes_raw = ft_preprocessing(cfg);
 
-for v = 1:2
+for v = 1:2 %loop for both channels (in this case)
+    %extract time of spikes 
     threshold = (median(abs(spikes_raw.trial{1,1}(v,:))))/0.6745;
     spike_time = spike_detection(spikes_raw.trial{1,1}(v,:),threshold);
     
+    %mark every spike with a star 
     figure; hold;
     plot(spikes_raw.time{1,1},spikes_raw.trial{1,1}(v,:));
     plot(spikes_raw.time{1,1}(spike_time),0,'*');
@@ -55,6 +57,7 @@ end
     
 %% Option 1: FFT, Hanning taper
 % Calculating multiple FFTs for a different number of Cycles (3 to 7)
+% to find the best method
 
 x = 1;
 for v = 3:7 
@@ -92,6 +95,7 @@ end
 
 %% Option 2: Wavelet
 % Calculating multiple FFTs for a different number of Cycles (3 to 7)
+%to find the best method
 
 x = 1;
 for v = 3:7
