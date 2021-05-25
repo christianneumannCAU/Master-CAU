@@ -25,21 +25,21 @@ DEPTH = extractBetween({indat.name},'D','F'); % extract Depth from filename
 
 for v = 1:length(indat) 
     %% read data + preprocessing
-    try
-        cfg = [];
-        cfg.demean = 'yes';             %remove DC offset
-        cfg.hpfilter = 'yes';
-        cfg.hpfreq = .5;                %high-pass filter, cutting everything under .5 Hz
-        cfg.hpfilttype = 'firws';
-        cfg.lpfilter = 'yes';
-        cfg.lpfreq = 45;                %low-pass filter, cutting everything over 45 Hz
-        cfg.lpfilttype = 'firws';
-        cfg.dataset = [PATHIN_conv indat(v).name];
-        data{v} = ft_preprocessing(cfg);
-    catch ME
-        display(['ERROR IN' ' ' PATHIN_conv indat(v).name]);  
-        continue
-    end 
+%     try
+%         cfg = [];
+%         cfg.demean = 'yes';             %remove DC offset
+%         cfg.hpfilter = 'yes';
+%         cfg.hpfreq = .5;                %high-pass filter, cutting everything under .5 Hz
+%         cfg.hpfilttype = 'firws';
+%         cfg.lpfilter = 'yes';
+%         cfg.lpfreq = 45;                %low-pass filter, cutting everything over 45 Hz
+%         cfg.lpfilttype = 'firws';
+%         cfg.dataset = [PATHIN_conv indat(v).name];
+%         data{v} = ft_preprocessing(cfg);
+%     catch ME
+%         display(['ERROR IN' ' ' PATHIN_conv indat(v).name]);  
+%         continue
+%     end 
 
 %% excluding files with no data
     if length(data{v}) & sum(data{v}.trial{1,1},'all') ~= 0
@@ -53,31 +53,33 @@ for v = 1:length(indat)
 %         cfg.bpfilttype = 'firws';
 %         cfg.dataset = [PATHIN_conv indat(v).name];
 %         spikes_raw{v} = ft_preprocessing(cfg);
-% 
-%         for c = 1:length(spikes_raw{v}.label) %loop for channels
-%             %extract time of spikes
-%             threshold = (median(abs(spikes_raw{v}.trial{1,1}(c,:))))/0.6745;
-%             spike_time{v} = spike_detection(spikes_raw{v}.trial{1,1}(c,:),threshold);
-% 
-%             %mark every spike with a star
-%             figure; hold;
-%             plot(spikes_raw{v}.time{1,1},spikes_raw{v}.trial{1,1}(c,:));
-%             plot(spikes_raw{v}.time{1,1}(spike_time{v}),0,'*');
-%         end
+
+        for c = 1:length(spikes_raw{v}.label) %loop for channels
+            %extract time of spikes
+            threshold = (median(abs(spikes_raw{v}.trial{1,1}(c,:))))/0.6745;
+            spike_time{v} = spike_detection(spikes_raw{v}.trial{1,1}(c,:),threshold);
+
+            %mark every spike with a star
+            figure; hold;
+            plot(spikes_raw{v}.time{1,1},spikes_raw{v}.trial{1,1}(c,:));
+            plot(spikes_raw{v}.time{1,1}(spike_time{v}),0,'*');
+            str = [spikes_raw{v}.label(c) ' ' DEPTH(v)];
+            title(str) ;
+        end
        
 %% FFT, Hanning taper
 
-        cfg=[];
-        cfg.method='mtmconvol'; 
-        cfg.output='pow'; % Output parameter
-        cfg.foi=[1:.05:30]; % Frequency resolution
-        cfg.toi=[0:.01: 5]; % Temporal resolution
-        cfg.t_ftimwin = 5./cfg.foi;
-        cfg.taper = 'hanning'; % Frequency-Adaptive Smoothing
-        TFR{v}=ft_freqanalysis(cfg,data{v});
+%         cfg=[];
+%         cfg.method='mtmconvol'; 
+%         cfg.output='pow'; % Output parameter
+%         cfg.foi=[1:.05:30]; % Frequency resolution
+%         cfg.toi=[0:.01: 5]; % Temporal resolution
+%         cfg.t_ftimwin = 5./cfg.foi;
+%         cfg.taper = 'hanning'; % Frequency-Adaptive Smoothing
+%         TFR{v}=ft_freqanalysis(cfg,data{v});
     
 %% Plotting Option 1
-% 
+
 %         m{v} = mean(TFR{v}.powspctrm,[3],'omitnan'); %avarege over time
 % 
 %         %normalize data
