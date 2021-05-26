@@ -25,21 +25,21 @@ DEPTH = extractBetween({indat.name},'D','F'); % extract Depth from filename
 
 for v = 1:length(indat) 
     %% read data + preprocessing
-%     try
-%         cfg = [];
-%         cfg.demean = 'yes';             %remove DC offset
-%         cfg.hpfilter = 'yes';
-%         cfg.hpfreq = .5;                %high-pass filter, cutting everything under .5 Hz
-%         cfg.hpfilttype = 'firws';
-%         cfg.lpfilter = 'yes';
-%         cfg.lpfreq = 45;                %low-pass filter, cutting everything over 45 Hz
-%         cfg.lpfilttype = 'firws';
-%         cfg.dataset = [PATHIN_conv indat(v).name];
-%         data{v} = ft_preprocessing(cfg);
-%     catch ME
-%         display(['ERROR IN' ' ' PATHIN_conv indat(v).name]);  
-%         continue
-%     end 
+    try
+        cfg = [];
+        cfg.demean = 'yes';             %remove DC offset
+        cfg.hpfilter = 'yes';
+        cfg.hpfreq = .5;                %high-pass filter, cutting everything under .5 Hz
+        cfg.hpfilttype = 'firws';
+        cfg.lpfilter = 'yes';
+        cfg.lpfreq = 45;                %low-pass filter, cutting everything over 45 Hz
+        cfg.lpfilttype = 'firws';
+        cfg.dataset = [PATHIN_conv indat(v).name];
+        data{v} = ft_preprocessing(cfg);
+    catch ME
+        display(['ERROR IN' ' ' PATHIN_conv indat(v).name]);  
+        continue
+    end 
 
 %% excluding files with no data
     if length(data{v}) & sum(data{v}.trial{1,1},'all') ~= 0
@@ -47,12 +47,12 @@ for v = 1:length(indat)
 %         figure; hold;
 %         plot(data{1,v}.time{1,1},data{1,v}.trial{1,1});
 %% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
-%         cfg = [];
-%         cfg.bpfilter = 'yes';
-%         cfg.bpfreq = [300 3000]; %bandpass-filter
-%         cfg.bpfilttype = 'firws';
-%         cfg.dataset = [PATHIN_conv indat(v).name];
-%         spikes_raw{v} = ft_preprocessing(cfg);
+        cfg = [];
+        cfg.bpfilter = 'yes';
+        cfg.bpfreq = [300 3000]; %bandpass-filter
+        cfg.bpfilttype = 'firws';
+        cfg.dataset = [PATHIN_conv indat(v).name];
+        spikes_raw{v} = ft_preprocessing(cfg);
 
         for c = 1:length(spikes_raw{v}.label) %loop for channels
             %extract time of spikes

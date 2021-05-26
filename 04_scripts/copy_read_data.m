@@ -21,36 +21,67 @@ cd ([PATHIN_conv])
 indat = dir('*.mat');
 DEPTH = extractBetween({indat.name},'D','F'); % extract Depth from filename
 
-%% read data
+%% read data and automatic artefact rejection 
+
 for v = 1:length(indat)
     try
             cfg = [];
             cfg.dataset = [PATHIN_conv indat(v).name];
             data{v} = ft_preprocessing(cfg);
-        catch ME
+    catch ME
             display(['ERROR IN' ' ' PATHIN_conv indat(v).name]);  
             continue
-    end 
+    end
+    
+  
+    for c = 1:length(data{v}.label) %loop for channels
+        % jump
+        cfg = [];
+        cfg.trl = data{v}.trial{1,1}(c,:)
+        cfg.datafile = [PATHIN_conv indat(v).name];
+        cfg.headerfile = [PATHIN_conv indat(v).name];
+        cfg.continuous = 'yes';
+        
+        % channel selection, cutoff and padding
+        cfg.artfctdef.zvalue.channel = [data{v}.label(c)];
+        cfg.artfctdef.zvalue.cutoff = 100;
+        cfg.artfctdef.zvalue.trlpadding = 0;
+        cfg.artfctdef.zvalue.artpadding = 0;
+        cfg.artfctdef.zvalue.fltpadding = 0;
+        
+        % algorithmic parameters
+        cfg.artfctdef.zvalue.cumulative = 'yes';
+        cfg.artfctdef.zvalue.medianfilter = 'yes';
+        cfg.artfctdef.zvalue.medianfiltord = 9;
+        cfg.artfctdef.zvalue.absdiff = 'yes';
+
+        % make the process interactive
+        cfg.artfctdef.zvalue.interactive = 'yes';
+
+        [cfg, artifact_jump] = ft_artifact_zvalue(cfg);
+    end
+
 end
+
 %% loop every file in folder for one patient
 
 for v = 1:length(indat) 
-    %% read data + preprocessing
-%     try
-%         cfg = [];
-%         cfg.demean = 'yes';             %remove DC offset
-%         cfg.hpfilter = 'yes';
-%         cfg.hpfreq = .5;                %high-pass filter, cutting everything under .5 Hz
-%         cfg.hpfilttype = 'firws';
-%         cfg.lpfilter = 'yes';
-%         cfg.lpfreq = 45;                %low-pass filter, cutting everything over 45 Hz
-%         cfg.lpfilttype = 'firws';
-%         cfg.dataset = [PATHIN_conv indat(v).name];
-%         data{v} = ft_preprocessing(cfg);
-%     catch ME
-%         display(['ERROR IN' ' ' PATHIN_conv indat(v).name]);  
-%         continue
-%     end 
+    %% preprocessing
+    try
+        cfg = [];
+        cfg.demean = 'yes';             %remove DC offset
+        cfg.hpfilter = 'yes';
+        cfg.hpfreq = .5;                %high-pass filter, cutting everything under .5 Hz
+        cfg.hpfilttype = 'firws';
+        cfg.lpfilter = 'yes';
+        cfg.lpfreq = 45;                %low-pass filter, cutting everything over 45 Hz
+        cfg.lpfilttype = 'firws';
+        cfg.dataset = [PATHIN_conv indat(v).name];
+        data{v} = ft_preprocessing(cfg);
+    catch ME
+        display(['ERROR IN' ' ' PATHIN_conv indat(v).name]);  
+        continue
+    end 
 
 %% excluding files with no data
     if length(data{v}) & sum(data{v}.trial{1,1},'all') ~= 0
@@ -58,12 +89,12 @@ for v = 1:length(indat)
 %         figure; hold;
 %         plot(data{1,v}.time{1,1},data{1,v}.trial{1,1});
 %% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
-%         cfg = [];
-%         cfg.bpfilter = 'yes';
-%         cfg.bpfreq = [300 3000]; %bandpass-filter
-%         cfg.bpfilttype = 'firws';
-%         cfg.dataset = [PATHIN_conv indat(v).name];
-%         spikes_raw{v} = ft_preprocessing(cfg);
+        cfg = [];
+        cfg.bpfilter = 'yes';
+        cfg.bpfreq = [300 3000]; %bandpass-filter
+        cfg.bpfilttype = 'firws';
+        cfg.dataset = [PATHIN_conv indat(v).name];
+        spikes_raw{v} = ft_preprocessing(cfg);
 
         for c = 1:length(spikes_raw{v}.label) %loop for channels
             %extract time of spikes
@@ -80,14 +111,14 @@ for v = 1:length(indat)
        
 %% FFT, Hanning taper
 
-%         cfg=[];
-%         cfg.method='mtmconvol'; 
-%         cfg.output='pow'; % Output parameter
-%         cfg.foi=[1:.05:30]; % Frequency resolution
-%         cfg.toi=[0:.01: 5]; % Temporal resolution
-%         cfg.t_ftimwin = 5./cfg.foi;
-%         cfg.taper = 'hanning'; % Frequency-Adaptive Smoothing
-%         TFR{v}=ft_freqanalysis(cfg,data{v});
+        cfg=[];
+        cfg.method='mtmconvol'; 
+        cfg.output='pow'; % Output parameter
+        cfg.foi=[1:.05:30]; % Frequency resolution
+        cfg.toi=[0:.01: 5]; % Temporal resolution
+        cfg.t_ftimwin = 5./cfg.foi;
+        cfg.taper = 'hanning'; % Frequency-Adaptive Smoothing
+        TFR{v}=ft_freqanalysis(cfg,data{v});
     
 %% Plotting Option 1
 
