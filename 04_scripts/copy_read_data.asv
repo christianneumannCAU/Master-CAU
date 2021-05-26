@@ -29,10 +29,11 @@ for v = 1:length(indat)
         cfg.dataset = [PATHIN_conv indat(v).name];
         data{v} = ft_preprocessing(cfg);
     
+ 
         % channel selection, cutoff and padding
         cfg = [];
         cfg.artfctdef.zvalue.channel = data{v}.label ;
-        cfg.artfctdef.zvalue.cutoff = 25;
+        cfg.artfctdef.zvalue.cutoff = 100;
         cfg.artfctdef.zvalue.trlpadding = 0;
         cfg.artfctdef.zvalue.artpadding = 0;
         cfg.artfctdef.zvalue.fltpadding = 0;
@@ -46,8 +47,8 @@ for v = 1:length(indat)
         % make the process interactive
         cfg.artfctdef.zvalue.interactive = 'yes';
 
+    
         [cfg,artifact_jump] = ft_artifact_zvalue(cfg, data{v});
-        
     catch ME
         display(['ERROR IN' ' ' PATHIN_conv indat(v).name]);  
         continue
@@ -78,39 +79,39 @@ for v = 1:length(indat)
 %% excluding files with no data
     if length(data{v}) & sum(data{v}.trial{1,1},'all') ~= 0
 %% plot data
-        figure; hold;
-        plot(data{1,v}.time{1,1},data{1,v}.trial{1,1});
+%         figure; hold;
+%         plot(data{1,v}.time{1,1},data{1,v}.trial{1,1});
 %% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
-%         cfg = [];
-%         cfg.bpfilter = 'yes';
-%         cfg.bpfreq = [300 3000]; %bandpass-filter
-%         cfg.bpfilttype = 'firws';
-%         cfg.dataset = [PATHIN_conv indat(v).name];
-%         spikes_raw{v} = ft_preprocessing(cfg);
-% 
-%         for c = 1:length(spikes_raw{v}.label) %loop for channels
-%             %extract time of spikes
-%             threshold = (median(abs(spikes_raw{v}.trial{1,1}(c,:))))/0.6745;
-%             spike_time{v} = spike_detection(spikes_raw{v}.trial{1,1}(c,:),threshold);
-% 
-%             %mark every spike with a star
-%             figure; hold;
-%             plot(spikes_raw{v}.time{1,1},spikes_raw{v}.trial{1,1}(c,:));
-%             plot(spikes_raw{v}.time{1,1}(spike_time{v}),0,'*');
-%             str = [spikes_raw{v}.label(c) ' ' DEPTH(v)];
-%             title(str) ;
-%         end
-%        
-% %% FFT, Hanning taper
-% 
-%         cfg=[];
-%         cfg.method='mtmconvol'; 
-%         cfg.output='pow'; % Output parameter
-%         cfg.foi=[1:.05:30]; % Frequency resolution
-%         cfg.toi=[0:.01: 5]; % Temporal resolution
-%         cfg.t_ftimwin = 5./cfg.foi;
-%         cfg.taper = 'hanning'; % Frequency-Adaptive Smoothing
-%         TFR{v}=ft_freqanalysis(cfg,data{v});
+        cfg = [];
+        cfg.bpfilter = 'yes';
+        cfg.bpfreq = [300 3000]; %bandpass-filter
+        cfg.bpfilttype = 'firws';
+        cfg.dataset = [PATHIN_conv indat(v).name];
+        spikes_raw{v} = ft_preprocessing(cfg);
+
+        for c = 1:length(spikes_raw{v}.label) %loop for channels
+            %extract time of spikes
+            threshold = (median(abs(spikes_raw{v}.trial{1,1}(c,:))))/0.6745;
+            spike_time{v} = spike_detection(spikes_raw{v}.trial{1,1}(c,:),threshold);
+
+            %mark every spike with a star
+            figure; hold;
+            plot(spikes_raw{v}.time{1,1},spikes_raw{v}.trial{1,1}(c,:));
+            plot(spikes_raw{v}.time{1,1}(spike_time{v}),0,'*');
+            str = [spikes_raw{v}.label(c) ' ' DEPTH(v)];
+            title(str) ;
+        end
+       
+%% FFT, Hanning taper
+
+        cfg=[];
+        cfg.method='mtmconvol'; 
+        cfg.output='pow'; % Output parameter
+        cfg.foi=[1:.05:30]; % Frequency resolution
+        cfg.toi=[0:.01: 5]; % Temporal resolution
+        cfg.t_ftimwin = 5./cfg.foi;
+        cfg.taper = 'hanning'; % Frequency-Adaptive Smoothing
+        TFR{v}=ft_freqanalysis(cfg,data{v});
     
 %% Plotting Option 1
 
