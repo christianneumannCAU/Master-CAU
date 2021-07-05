@@ -20,15 +20,17 @@ for v = 1:length(data) % read and clean data first
     cfg             = [];
     cfg.method      = 'mtmconvol'; 
     cfg.output      = 'pow';        % Output parameter
-    cfg.foi         = [1:.05:30];   % Frequency resolution
+    cfg.foi         = [2:.05:35];   % Frequency resolution
     cfg.toi         = [0:.01: 5];   % Temporal resolution
     cfg.t_ftimwin   = 5./cfg.foi;
     cfg.taper       = 'hanning';    % Frequency-Adaptive Smoothing
     
     TFR{v}          = ft_freqanalysis(cfg,data_FFT{v});
     
+    m{v} = mean(TFR{v}.powspctrm,[3],'omitnan'); %avarege powerspectrum over time
+    
     % Plotting Option 1
-    m{v} = mean(TFR{v}.powspctrm,[3],'omitnan'); %avarege over time
+ 
 
     %normalize data
     for c = 1:length(data_FFT{v}.label)

@@ -1,10 +1,18 @@
-settings = [];
-settings.peak_width_limits = [1 12]
-freqs = TFR{1, 1}.freq;
-power_spectrum = m{1,1}(1,:);
-missing = find(isnan(power_spectrum)==1);
-power_spectrum(isnan(power_spectrum))= power_spectrum(missing+1);
-f_range = [1 30];
-return_model = 1;
+for v = 1:length(TFR)
+    settings = [];
+    settings.peak_width_limits = [1.5 12]; %minimum and maximum widths of etracted peaks
+    settings.peak_threshold = 2; %standard deviation of the aperiodic-removed powerspectrum, above which a data point must pass to be considered a candidate peak
+    f_range = [1 35]; %fitting range
+    return_model = 1;
+    freqs{v} = TFR{v}.freq;
+    
+    for c = 1:length(data_FFT{v}.label)
+        power_spectrum{v}(c,:) = m{v}(c,:);
+        try
+            fooof_results{v}(c,:) = fooof(freqs{v}, power_spectrum{v}(c,:) , f_range ,settings , return_model);
+        catch ME
+            continue
+        end
+    end
 
-fooof_results = fooof(freqs, power_spectrum , f_range ,settings , return_model);
+end

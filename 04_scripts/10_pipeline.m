@@ -78,61 +78,79 @@ for v = 1:length(indat)
     cfg             = [];
     cfg.method      = 'mtmconvol'; 
     cfg.output      = 'pow';        % Output parameter
-    cfg.foi         = [1:.05:30];   % Frequency resolution
+    cfg.foi         = [2:.05:35];   % Frequency resolution
     cfg.toi         = [0:.01: 5];   % Temporal resolution
     cfg.t_ftimwin   = 5./cfg.foi;
     cfg.taper       = 'hanning';    % Frequency-Adaptive Smoothing
     
     TFR{v}          = ft_freqanalysis(cfg,data_FFT{v});
+    
+    m{v} = mean(TFR{v}.powspctrm,[3],'omitnan'); %avarege powerspectrum over time
 
-    % Plotting Option 1
+%     % Plotting FFT
+% 
+%     %normalize data
+%     for c = 1:length(data_FFT{v}.label)
+%         mnm = min(m{v}(c,:),[],'omitnan');
+%         mxm = max(m{v}(c,:),[],'omitnan');
+%         norm_FFT{v}(c,:) = (m{v}(c,:)- mnm)/(mxm - mnm);
+%     end
+% 
+%     figure; hold;
+%     plot(TFR{v}.freq,norm_FFT{v});
+%     str = ['powerspectrum FFT (Hanning)' ' ' DEPTH(v)];
+%     title(str) ;
+%     xlabel 'Frequency [Hz]';
+%     ylabel 'Power';
+%     lgd = legend(extractAfter(data_FFT{v}.label,10));
+%     lgd.NumColumns = length(data_FFT{v}.label);
 
-    m{v} = mean(TFR{v}.powspctrm,[3],'omitnan'); %avarege over time
+%% FOOOF
 
-    %normalize data
+    settings = []; 
+    settings.peak_width_limits = [1.5 12]; %minimum and maximum widths of etracted peaks
+    settings.peak_threshold = 2; %standard deviation of the aperiodic-removed powerspectrum, above which a data point must pass to be considered a candidate peak
+    f_range = [1 35]; %fitting range
+    return_model = 1; 
+    freqs{v} = TFR{v}.freq;
+    
     for c = 1:length(data_FFT{v}.label)
-        mnm = min(m{v}(c,:),[],'omitnan')
-        mxm = max(m{v}(c,:),[],'omitnan')
-        norm_FFT{v}(c,:) = (m{v}(c,:)- mnm)/(mxm - mnm);
-    end
-
-    figure; hold;
-    plot(TFR{v}.freq,norm_FFT{v});
-    str = ['powerspectrum FFT (Hanning)' ' ' DEPTH(v)];
-    title(str) ;
-    xlabel 'Frequency [Hz]';
-    ylabel 'Power';
-    lgd = legend(extractAfter(data_FFT{v}.label,10));
-    lgd.NumColumns = length(data_FFT{v}.label);
-    
-%% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
-    cfg             = [];
-    cfg.bpfilter    = 'yes';
-    cfg.bpfreq      = [300 3000];           %bandpass-filter
-    cfg.bpfilttype  = 'firws';
-    cfg.dataset     = [PATHIN_conv indat(v).name];
-    
-    try
-        data_spikes{v}   = ft_preprocessing(cfg,data{v});
-    catch ME
-        continue
-    end
-
-    for c = 1:length(data_spikes{v}.label)   % c = channel
-
-        %extract time of spikes
-        threshold = (median(abs(data_spikes{v}.trial{1,1}(c,:))))/0.6745;
-        spike_time{v} = spike_detection(data_spikes{v}.trial{1,1}(c,:),threshold);
-
-        %plot spikes and mark every spike with a star
+        power_spectrum{v}(c,:) = m{v}(c,:);
         try
-            figure; hold;
-            plot(data_spikes{v}.time{1,1},data_spikes{v}.trial{1,1}(c,:));
-            plot(data_spikes{v}.time{1,1}(spike_time{v}),0,'*');
-            str = [data_spikes{v}.label(c) ' ' DEPTH(v)];
-            title(str) ;
+            fooof_results{v}(c,:) = fooof(freqs{v}, power_spectrum{v}(c,:) , f_range ,settings , return_model);
         catch ME
             continue
         end
     end
+    
+%% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
+%     cfg             = [];
+%     cfg.bpfilter    = 'yes';
+%     cfg.bpfreq      = [300 3000];           %bandpass-filter
+%     cfg.bpfilttype  = 'firws';
+%     cfg.dataset     = [PATHIN_conv indat(v).name];
+%     
+%     try
+%         data_spikes{v}   = ft_preprocessing(cfg,data{v});
+%     catch ME
+%         continue
+%     end
+% 
+%     for c = 1:length(data_spikes{v}.label)   % c = channel
+% 
+%         %extract time of spikes
+%         threshold = (median(abs(data_spikes{v}.trial{1,1}(c,:))))/0.6745;
+%         spike_time{v} = spike_detection(data_spikes{v}.trial{1,1}(c,:),threshold);
+% 
+%         %plot spikes and mark every spike with a star
+%         try
+%             figure; hold;
+%             plot(data_spikes{v}.time{1,1},data_spikes{v}.trial{1,1}(c,:));
+%             plot(data_spikes{v}.time{1,1}(spike_time{v}),0,'*');
+%             str = [data_spikes{v}.label(c) ' ' DEPTH(v)];
+%             title(str) ;
+%         catch ME
+%             continue
+%         end
+%     end
 end
