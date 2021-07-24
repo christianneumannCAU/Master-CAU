@@ -1,3 +1,5 @@
+%make sure, that the version of python in cmd and in python match each
+%other
 for v = 1:length(TFR)
     settings = [];
     settings.peak_width_limits = [1.5 12]; %minimum and maximum widths of etracted peaks
