@@ -1,13 +1,14 @@
+tic;
+
 %% Startup
 clear all;  %remove all variables from current workspace
 close all;  %close all plots
 clc;        %clear all text from command window 
 
-%add toolboxes and initiate fieldtrip
+%add and initiate fieldtrip
 MAIN = [fileparts(pwd) '\'];
 addpath(genpath(MAIN));
-addpath([userpath '\toolboxes\eeglab_current\']);
-addpath(genpath([userpath '\toolboxes\fieldtrip-20210411\']));
+addpath([MAIN '101_software\fieldtrip-20210411\']);
 ft_defaults;
 
 %Change MatLab defaults
@@ -37,15 +38,15 @@ for p = 3:length(patient)
         % read data
         cfg         = [];
         cfg.dataset = [PATHIN_conv patient(p).name filesep indat(v).name];
-        data{v,p-2}     = ft_preprocessing(cfg);        % read data unfiltered
+        data{v}     = ft_preprocessing(cfg);        % read data unfiltered
 
-        for c = 1:length(data{v,p-2}.label)                 % c = channels
-            mnm = min(data{v,p-2}.trial{1,1}(c,:));         % lowest point 
-            mxm = max(data{v,p-2}.trial{1,1}(c,:));         % hightest point
+        for c = 1:length(data{v}.label)                 % c = channels
+            mnm = min(data{v}.trial{1,1}(c,:));         % lowest point 
+            mxm = max(data{v}.trial{1,1}(c,:));         % hightest point
 
             % normalize data
             if mxm - mnm ~= 0
-                norm_raw{v}(c,:) = (data{v,p-2}.trial{1,1}(c,:) - mnm) / (mxm - mnm);
+                norm_raw{v}(c,:) = (data{v}.trial{1,1}(c,:) - mnm) / (mxm - mnm);
             else
                 norm_raw{v}(c,:) = 1;
             end
@@ -59,7 +60,7 @@ for p = 3:length(patient)
 
             % replace data with nan if variance is smaller than 0.001
             if (vrc1 < vlim_l) || (vrc2 < vlim_l) || (vrc3 < vlim_l) || (vrc4 < vlim_l)         
-                data{v,p-2}.trial{1,1}(c,:) = nan(size(data{v,p-2}.trial{1}(c,:)));
+                data{v}.trial{1,1}(c,:) = nan(size(data{v}.trial{1}(c,:)));
             end
         end
 
@@ -73,9 +74,10 @@ for p = 3:length(patient)
         cfg.lpfilter    = 'yes';
         cfg.lpfreq      = 45;       %low-pass filter, cutting everything over 45 Hz
         cfg.lpfilttype  = 'firws';
+        cfg.pad         = 'nextpow2'
 
         try
-            data_FFT{v,p-2}         = ft_preprocessing(cfg,data{v,p-2}); 
+            data_FFT{v}         = ft_preprocessing(cfg,data{v}); 
         catch ME
             continue
         end
@@ -89,27 +91,27 @@ for p = 3:length(patient)
         cfg.t_ftimwin   = 5./cfg.foi;
         cfg.taper       = 'hanning';    % Frequency-Adaptive Smoothing
 
-        TFR{v,p-2}          = ft_freqanalysis(cfg,data_FFT{v,p-2});
+        TFR{v}          = ft_freqanalysis(cfg,data_FFT{v});
 
-        m{v,p-2} = mean(TFR{v,p-2}.powspctrm,[3],'omitnan'); %avarege powerspectrum over time
+        m{v} = mean(TFR{v}.powspctrm,[3],'omitnan'); %avarege powerspectrum over time
 
     %     % Plotting FFT
     % 
     %     %normalize data
-    %     for c = 1:length(data_FFT{v,p-2}.label)
-    %         mnm = min(m{v,p-2}(c,:),[],'omitnan');
-    %         mxm = max(m{v,p-2}(c,:),[],'omitnan');
-    %         norm_FFT{v}(c,:) = (m{v,p-2}(c,:)- mnm)/(mxm - mnm);
+    %     for c = 1:length(data_FFT{v}.label)
+    %         mnm = min(m{v}(c,:),[],'omitnan');
+    %         mxm = max(m{v}(c,:),[],'omitnan');
+    %         norm_FFT{v}(c,:) = (m{v}(c,:)- mnm)/(mxm - mnm);
     %     end
     % 
     %     figure; hold;
-    %     plot(TFR{v,p-2}.freq,norm_FFT{v});
+    %     plot(TFR{v}.freq,norm_FFT{v});
     %     str = ['powerspectrum FFT (Hanning)' ' ' DEPTH(v)];
     %     title(str) ;
     %     xlabel 'Frequency [Hz]';
     %     ylabel 'Power';
-    %     lgd = legend(extractAfter(data_FFT{v,p-2}.label,10));
-    %     lgd.NumColumns = length(data_FFT{v,p-2}.label);
+    %     lgd = legend(extractAfter(data_FFT{v}.label,10));
+    %     lgd.NumColumns = length(data_FFT{v}.label);
 
     %% FOOOF
     %make sure, that the version of python in cmd and in python match each
@@ -120,12 +122,12 @@ for p = 3:length(patient)
         settings.peak_threshold = 2; %standard deviation of the aperiodic-removed powerspectrum, above which a data point must pass to be considered a candidate peak
         f_range = [1 35]; %fitting range
         return_model = 1; 
-        freqs{v,p-2} = TFR{v,p-2}.freq;
+        freqs{v} = TFR{v}.freq;
 
-        for c = 1:length(data_FFT{v,p-2}.label)
-            power_spectrum{v,p-2}(c,:) = m{v,p-2}(c,:);
+        for c = 1:length(data_FFT{v}.label)
+            power_spectrum{v}(c,:) = m{v}(c,:);
             try
-                fooof_results{v,p-2}(c,:) = fooof(freqs{v,p-2}, power_spectrum{v,p-2}(c,:) , f_range ,settings , return_model);
+                fooof_results{v}(c,:) = fooof(freqs{v}, power_spectrum{v}(c,:) , f_range ,settings , return_model);
             catch ME
                 continue
             end
@@ -162,18 +164,11 @@ for p = 3:length(patient)
     %         end
     %     end
     end
+    
+    %% Save for later
+    save([MAIN '02_data' filesep '03_processed' filesep int2str(p-2) '_' patient(p).name '.mat'],'data','data_FFT','fooof_results','DEPTH','SIDE','TRAJECTORY','TFR');
     %% clear for next loop
-    clear norm_raw;
-    clear power_spectrum
+    clearvars -except MAIN PATHIN_conv patient vlim_l
 end
 
-%% Save for later
-% convert Matlab variables, name and save them
-DEPTH = array2table(DEPTH,'VariableNames',{patient(3:end).name});
-SIDE = array2table(SIDE,'VariableNames',{patient(3:end).name});
-TRAJECTORY = array2table(TRAJECTORY,'VariableNames',{patient(3:end).name});
-data = array2table(data,'VariableNames',{patient(3:end).name});
-data_FFT = array2table(data_FFT,'VariableNames',{patient(3:end).name});
-fooof_results = array2table(fooof_results,'VariableNames',{patient(3:end).name});
-TFR = array2table(TFR,'VariableNames',{patient(3:end).name});
-save([MAIN '02_data' filesep '03_processed' filesep,'allData_preproc.mat'],'data','data_FFT','fooof_results','DEPTH','SIDE','TRAJECTORY','TFR');
+t = toc;
