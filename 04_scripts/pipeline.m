@@ -1,9 +1,9 @@
-tic;
+% %% Startup
+% clear all;  %remove all variables from current workspace
+% close all;  %close all plots
+% clc;        %clear all text from command window 
 
-%% Startup
-clear all;  %remove all variables from current workspace
-close all;  %close all plots
-clc;        %clear all text from command window 
+tic;
 
 %add and initiate fieldtrip
 MAIN = [fileparts(pwd) '\'];
@@ -20,17 +20,23 @@ set(0,'defaultfigurecolor',[1 1 1]);
 PATHIN_conv = [MAIN '02_data' filesep '02_test' filesep];
 cd([PATHIN_conv]);
 patient = dir;
-%% define variables 
+%% define variables and empty structures
+
 vlim_l = 0.001; % define lower boundary for variance 
+data = [];
+data_FFT = [];
+TFR = [];
+m = [];
+fooof_results = [];
 
 %% loop through every patient
 
 for p = 3:length(patient)
     cd([PATHIN_conv patient(p).name filesep]); % switch to a patient
     indat = dir('*.mat'); 
-    DEPTH(1:length(indat),p-2) = extractBetween({indat.name},'D','F'); % extract Depth from filename
-    SIDE(1:length(indat),p-2) = extract({indat.name},1); % extract Side from filename 
-    TRAJECTORY(1:length(indat),p-2) = extractBetween({indat.name},2,3); % extract Trajectory from filename
+    DEPTH(1:length(indat)) = extractBetween({indat.name},'D','F'); % extract Depth from filename
+    SIDE(1:length(indat)) = extract({indat.name},1); % extract Side from filename 
+    TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3); % extract Trajectory from filename
 
     %% loop every file in folder for one patient
     for v = 1:length(indat)     
@@ -114,7 +120,7 @@ for p = 3:length(patient)
     %     lgd.NumColumns = length(data_FFT{v}.label);
 
     %% FOOOF
-    %make sure, that the version of python in cmd and in python match each
+    %make sure, that the version of python in cmd and in matlab match each
     %other
 
         settings = []; 
