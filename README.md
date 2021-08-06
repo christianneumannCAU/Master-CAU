@@ -16,6 +16,10 @@ Senior lead support engineer<br>
 ## Folder structure
 * 00_general_info *(infromation regarding the thesis)*
 * 01_literature *(related papers & presentations)*
+* 02_data *(raw, converted and processed LFPs of PD patients)*
+* 03_exposé *(official document and presentation for university Kiel)*
+* 04_scripts *(self-written scripts to read and process data)*
+* 101_software *(programms to convert, visualize or process data)*
 
 ## Versioning
 *Version 1.0// 04.01.2021*

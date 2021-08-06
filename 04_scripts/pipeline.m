@@ -1,7 +1,7 @@
-% %% Startup
-% clear all;  %remove all variables from current workspace
-% close all;  %close all plots
-% clc;        %clear all text from command window 
+%% Startup
+clear all;  %remove all variables from current workspace
+close all;  %close all plots
+clc;        %clear all text from command window 
 
 tic;
 
@@ -22,13 +22,14 @@ cd([PATHIN_conv]);
 patient = dir;
 %% define variables and empty structures
 
-vlim_l = 0.001; % define lower boundary for variance 
-data = [];
-data_FFT = [];
-TFR = [];
-m = [];
-fooof_results = [];
-
+e               = 1;
+r               = 1;
+vlim_l          = 0.001; % define lower boundary for variance 
+data            = [];
+data_FFT        = [];
+TFR             = [];
+m               = [];
+fooof_results   = [];
 %% loop through every patient
 
 for p = 3:length(patient)
@@ -37,7 +38,7 @@ for p = 3:length(patient)
     DEPTH(1:length(indat)) = extractBetween({indat.name},'D','F'); % extract Depth from filename
     SIDE(1:length(indat)) = extract({indat.name},1); % extract Side from filename 
     TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3); % extract Trajectory from filename
-
+    error           = [];
     %% loop every file in folder for one patient
     for v = 1:length(indat)     
         %% read data + reject trials without data or with artefacts
@@ -45,6 +46,11 @@ for p = 3:length(patient)
         cfg         = [];
         cfg.dataset = [PATHIN_conv patient(p).name filesep indat(v).name];
         data{v}     = ft_preprocessing(cfg);        % read data unfiltered
+        
+        % downsampling
+        cfg             = []
+        cfg.resamplefs  = 512
+        data{v}         = ft_resampledata(cfg,data{v})
 
         for c = 1:length(data{v}.label)                 % c = channels
             mnm = min(data{v}.trial{1,1}(c,:));         % lowest point 
@@ -67,6 +73,10 @@ for p = 3:length(patient)
             % replace data with nan if variance is smaller than 0.001
             if (vrc1 < vlim_l) || (vrc2 < vlim_l) || (vrc3 < vlim_l) || (vrc4 < vlim_l)         
                 data{v}.trial{1,1}(c,:) = nan(size(data{v}.trial{1}(c,:)));
+                error{e,r}              = DEPTH{v};
+                error{e,r+1}            = data{v}.label(c);
+                error{e,r+2}            = 'artefacts found';
+                e                       = e+1;
             end
         end
 
@@ -85,6 +95,10 @@ for p = 3:length(patient)
         try
             data_FFT{v}         = ft_preprocessing(cfg,data{v}); 
         catch ME
+            error{e,r}          = DEPTH{v};
+            error{e,r+1}        = data{v}.label(c);
+            error{e,r+2}        = 'filtering didnt work';
+            e                   = e+1;
             continue
         end
 
@@ -135,10 +149,23 @@ for p = 3:length(patient)
             try
                 fooof_results{v}(c,:) = fooof(freqs{v}, power_spectrum{v}(c,:) , f_range ,settings , return_model);
             catch ME
+                error{e,r}              = DEPTH{v};
+                error{e,r+1}            = data{v}.label(c);
+                error{e,r+2}            = 'fooof didnt work';
+                e                       = e+1;
                 continue
             end
         end
 
+        % save for R
+        try
+            T       = struct2table(fooof_results{v},'RowNames',data{v}.label,'AsArray',true); 
+        catch ME
+            continue
+        end
+        T       = removevars(T,{'gaussian_params','freqs','power_spectrum','fooofed_spectrum','ap_fit'});
+        title   = [strcat(DEPTH(v),'.txt')];
+        writetable(T,string(title));
     %% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
     %     cfg             = [];
     %     cfg.bpfilter    = 'yes';
@@ -172,9 +199,9 @@ for p = 3:length(patient)
     end
     
     %% Save for later
-    save([MAIN '02_data' filesep '03_processed' filesep int2str(p-2) '_' patient(p).name '.mat'],'data','data_FFT','fooof_results','DEPTH','SIDE','TRAJECTORY','TFR');
+    save([MAIN '02_data' filesep '03_processed' filesep int2str(p-2) '_' patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
     %% clear for next loop
-    clearvars -except MAIN PATHIN_conv patient vlim_l
+    clearvars -except MAIN PATHIN_conv patient vlim_l e r
 end
 
 t = toc;
