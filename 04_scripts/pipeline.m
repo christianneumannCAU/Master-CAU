@@ -20,8 +20,8 @@ set(0,'defaultfigurecolor',[1 1 1]);
 PATHIN_conv = [MAIN '02_data' filesep '02_test' filesep];
 cd([PATHIN_conv]);
 patient = dir;
-%% define variables and empty structures
 
+%% define variables and empty structures
 e               = 1;
 r               = 1;
 vlim_l          = 0.001; % define lower boundary for variance 
@@ -30,8 +30,8 @@ data_FFT        = [];
 TFR             = [];
 m               = [];
 fooof_results   = [];
+    
 %% loop through every patient
-
 for p = 3:length(patient)
     cd([PATHIN_conv patient(p).name filesep]); % switch to a patient
     indat = dir('*.mat'); 
@@ -39,19 +39,21 @@ for p = 3:length(patient)
     SIDE(1:length(indat)) = extract({indat.name},1); % extract Side from filename 
     TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3); % extract Trajectory from filename
     error           = [];
+    
     %% loop every file in folder for one patient
     for v = 1:length(indat)     
         %% read data + reject trials without data or with artefacts
         % read data
         cfg         = [];
         cfg.dataset = [PATHIN_conv patient(p).name filesep indat(v).name];
-        data{v}     = ft_preprocessing(cfg);        % read data unfiltered
+        data{v}     = ft_preprocessing(cfg);        % read data unfiltered        
         
         % downsampling
         cfg             = []
         cfg.resamplefs  = 512
         data{v}         = ft_resampledata(cfg,data{v})
-
+        
+        
         for c = 1:length(data{v}.label)                 % c = channels
             mnm = min(data{v}.trial{1,1}(c,:));         % lowest point 
             mxm = max(data{v}.trial{1,1}(c,:));         % hightest point
@@ -72,10 +74,20 @@ for p = 3:length(patient)
 
             % replace data with nan if variance is smaller than 0.001
             if (vrc1 < vlim_l) || (vrc2 < vlim_l) || (vrc3 < vlim_l) || (vrc4 < vlim_l)         
-                data{v}.trial{1,1}(c,:) = nan(size(data{v}.trial{1}(c,:)));
+                data{v}.trial{1}(c,:) = nan(size(data{v}.trial{1}(c,:)));
                 error{e,r}              = DEPTH{v};
                 error{e,r+1}            = data{v}.label(c);
                 error{e,r+2}            = 'artefacts found';
+                e                       = e+1;
+            end
+            
+            % replace data with nan if there are less than 1280 samplepoints in
+            % Trial
+            if length(data{v}.trial{1}) < 1280
+                data{v}.trial{1}(c,:) = nan(size(data{v}.trial{1}(c,:)));
+                error{e,r}              = DEPTH{v};
+                error{e,r+1}            = data{v}.label(c);
+                error{e,r+2}            = 'not enough samplepoints';
                 e                       = e+1;
             end
         end
@@ -164,7 +176,7 @@ for p = 3:length(patient)
             continue
         end
         T       = removevars(T,{'gaussian_params','freqs','power_spectrum','fooofed_spectrum','ap_fit'});
-        title   = [strcat(DEPTH(v),'.txt')];
+        title   = [strcat(SIDE(v),TRAJECTORY(v),DEPTH(v),'.txt')];
         writetable(T,string(title));
     %% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
     %     cfg             = [];
