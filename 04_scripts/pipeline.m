@@ -7,7 +7,9 @@ tic;
 
 %add and initiate fieldtrip
 MAIN = [fileparts(pwd) '\'];
-addpath(genpath(MAIN));
+addpath(genpath([MAIN '101_software\matlab functions']));
+addpath(genpath([MAIN '02_data\']));
+addpath(genpath([MAIN '04_scripts\']));
 addpath([MAIN '101_software\fieldtrip-20210411\']);
 ft_defaults;
 
@@ -36,7 +38,7 @@ for p = 3:length(patient)
     cd([PATHIN_conv patient(p).name filesep]); % switch to a patient
     indat = dir('*.mat'); 
     DEPTH(1:length(indat)) = extractBetween({indat.name},'D','F'); % extract Depth from filename
-    SIDE(1:length(indat)) = extract({indat.name},1); % extract Side from filename 
+    SIDE(1:length(indat)) = extract({indat.name},1); % extract Side from filename (does not work with Matlab R2018b, use extractBefore)
     TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3); % extract Trajectory from filename
     error           = [];
     
