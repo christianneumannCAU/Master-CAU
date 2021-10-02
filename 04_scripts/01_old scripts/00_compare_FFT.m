@@ -5,9 +5,10 @@ clc;        %clear all text from command window
 
 %add toolboxes and initiate fieldtrip
 MAIN = [fileparts(pwd) '\'];
-addpath(genpath(MAIN));
-addpath([userpath '\toolboxes\eeglab_current\']);
-addpath(genpath([userpath '\toolboxes\fieldtrip-20210411\']));
+addpath(genpath([MAIN '101_software\matlab functions']));
+addpath(genpath([MAIN '02_data\']));
+addpath(genpath([MAIN '04_scripts\']));
+addpath([MAIN '101_software\fieldtrip-20210411\']);
 ft_defaults;
 
 %Change MatLab defaults

@@ -5,7 +5,8 @@ clc;        %clear all text from command window
 
 tic;
 
-%add and initiate fieldtrip
+%add subfolders and initiate fieldtrip (addpath(genpath(MAIN)) is not
+%possible, because fieldtrip needs to be added seperately
 MAIN = [fileparts(pwd) '\'];
 addpath(genpath([MAIN '101_software\matlab functions']));
 addpath(genpath([MAIN '02_data\']));
@@ -23,10 +24,13 @@ PATHIN_conv = [MAIN '02_data' filesep '02_test' filesep];
 cd([PATHIN_conv]);
 patient = dir;
 
-%% define variables and empty structures
+%% define variables 
+% counter for errors
 e               = 1;
 r               = 1;
-vlim_l          = 0.001; % define lower boundary for variance 
+% define lower boundary for variance
+vlim_l          = 0.001;
+% empty structures
 data            = [];
 data_FFT        = [];
 TFR             = [];
@@ -149,7 +153,8 @@ for p = 3:length(patient)
 
     %% FOOOF
     %make sure, that the version of python in cmd and in matlab match each
-    %other
+    %other (python 3.8 works optimally, python 3.6 from psychopy or 
+    %python from anaconda does not work)
 
         settings = []; 
         settings.peak_width_limits = [1.5 12]; %minimum and maximum widths of etracted peaks

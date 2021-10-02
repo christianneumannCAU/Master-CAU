@@ -1,5 +1,6 @@
 %make sure, that the version of python in cmd and in python match each
-%other
+%other (python 3.8 works optimally, python 3.6 from psychopy or 
+%python from anaconda does not work)
 for v = 1:length(TFR)
     settings = [];
     settings.peak_width_limits = [1.5 12]; %minimum and maximum widths of etracted peaks
