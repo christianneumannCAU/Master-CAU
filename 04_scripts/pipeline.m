@@ -176,45 +176,7 @@ for p = 3:length(patient)
             end
         end
 
-        % save for R
-        try
-            T       = struct2table(fooof_results{v},'RowNames',data{v}.label,'AsArray',true); 
-        catch ME
-            continue
-        end
-        T       = removevars(T,{'gaussian_params','freqs','power_spectrum','fooofed_spectrum','ap_fit'});
-        title   = [strcat(SIDE(v),TRAJECTORY(v),DEPTH(v),'.txt')];
-        writetable(T,string(title));
-    %% Extracting Spikes (Rey, Pedreira & Quiroga, 2015)
-    %     cfg             = [];
-    %     cfg.bpfilter    = 'yes';
-    %     cfg.bpfreq      = [300 3000];           %bandpass-filter
-    %     cfg.bpfilttype  = 'firws';
-    %     cfg.dataset     = [PATHIN_conv indat(v).name];
-    %     
-    %     try
-    %         data_spikes{v}   = ft_preprocessing(cfg,data{v});
-    %     catch ME
-    %         continue
-    %     end
-    % 
-    %     for c = 1:length(data_spikes{v}.label)   % c = channel
-    % 
-    %         %extract time of spikes
-    %         threshold = (median(abs(data_spikes{v}.trial{1,1}(c,:))))/0.6745;
-    %         spike_time{v} = spike_detection(data_spikes{v}.trial{1,1}(c,:),threshold);
-    % 
-    %         %plot spikes and mark every spike with a star
-    %         try
-    %             figure; hold;
-    %             plot(data_spikes{v}.time{1,1},data_spikes{v}.trial{1,1}(c,:));
-    %             plot(data_spikes{v}.time{1,1}(spike_time{v}),0,'*');
-    %             str = [data_spikes{v}.label(c) ' ' DEPTH(v)];
-    %             title(str) ;
-    %         catch ME
-    %             continue
-    %         end
-    %     end
+        
     end
     
     %% Save for later
