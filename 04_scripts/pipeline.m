@@ -3,8 +3,6 @@ clear all;  %remove all variables from current workspace
 close all;  %close all plots
 clc;        %clear all text from command window 
 
-tic;
-
 %add subfolders and initiate fieldtrip (addpath(genpath(MAIN)) is not
 %possible, because fieldtrip needs to be added seperately
 MAIN = [fileparts(pwd) '\'];
@@ -166,7 +164,7 @@ for p = 3:length(patient)
         for c = 1:length(data_FFT{v}.label)
             power_spectrum{v}(c,:) = m{v}(c,:);
             try
-                fooof_results{v}(c,:) = fooof(freqs{v}, power_spectrum{v}(c,:) , f_range ,settings , return_model);
+                fooof_results{p-2,v}(c,:) = fooof(freqs{v}, power_spectrum{v}(c,:) , f_range ,settings , return_model);
             catch ME
                 error{e,r}              = DEPTH{v};
                 error{e,r+1}            = data{v}.label(c);
@@ -179,10 +177,11 @@ for p = 3:length(patient)
         
     end
     
-    %% Save for later
+    %% Save in a patient-file
     save([MAIN '02_data' filesep '03_processed' filesep int2str(p-2) '_' patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
     %% clear for next loop
-    clearvars -except MAIN PATHIN_conv patient vlim_l e r
+    clearvars -except MAIN PATHIN_conv patient vlim_l e r fooof_results
 end
 
-t = toc;
+%% Save fooof results
+save([MAIN '02_data' filesep '03_processed' filesep '00_fooof_results.mat'],'fooof_results');
