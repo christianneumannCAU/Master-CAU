@@ -31,13 +31,12 @@ for p = 1:size(fooof_results,1) % p = patient
             hold on;
         end
     end
+    str = p;
+    title(str);
+    xlabel 'Frequency [Hz]';
+    ylabel 'fooofed spectrum';
     hold off;
 end
-
-%% create powerspectrum without aperiodic component
-new_spec = fooof_results{1,1}(1).power_spectrum - fooof_results{1,1}(1).ap_fit;
-
-% extract power for various oscillations
 
 %% create new table for regression
 fooof = [];
@@ -46,12 +45,17 @@ for p = 1:size(fooof_results,1)
     for d = 1:size(DEPTH,2)
         for c = 1:length(fooof_results{p,d})
             if sum(fooof_results{p,d}(c).ap_fit) ~= 0
-                fooof{x,1} = p;
-                fooof{x,2} = DEPTH{p,d};
-                fooof{x,3} = label{p,d}(c); 
-                fooof{x,4} = fooof_results{p,d}(c).aperiodic_params(2); %Exponent von der aperiodischen Komponente
-                %fooof{x,5} = 
-                %fooof{x,6} =
+                fooof{x,1} = p; %id
+                fooof{x,2} = SIDE{p,d};  
+                fooof{x,3} = DEPTH{p,d}; 
+                fooof{x,4} = label{p,d}(c); 
+                fooof{x,5} = fooof_results{p,d}(c).aperiodic_params(2); %Exponent von der aperiodischen Komponente
+                
+                % create powerspectrum without aperiodic component
+                new_spec{x,1} = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
+                
+                fooof{x,6} = trapz(fooof_results{p,d}(c).freqs(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<13),new_spec{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<13));
+                fooof{x,7} = trapz(fooof_results{p,d}(c).freqs(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<30),new_spec{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<30));
                 x = x+1;
             end
         end

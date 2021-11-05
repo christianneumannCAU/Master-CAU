@@ -40,7 +40,7 @@ for p = 3:length(patient)
     cd([PATHIN_conv patient(p).name filesep]); % switch to a patient
     indat = dir('*.mat'); 
     DEPTH(p-2,1:length(indat)) = extractBetween({indat.name},'D','F'); % extract Depth from filename
-    SIDE(1:length(indat)) = extract({indat.name},1); % extract Side from filename (does not work with Matlab R2018b, use extractBefore)
+    SIDE(p-2,1:length(indat)) = extract({indat.name},1); % extract Side from filename (does not work with Matlab R2018b, use extractBefore)
     TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3); % extract Trajectory from filename
     error           = [];
     
@@ -179,8 +179,8 @@ for p = 3:length(patient)
     %% Save in a patient-file
     save([MAIN '02_data' filesep '03_processed' filesep int2str(p-2) '_' patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
     %% clear for next loop
-    clearvars -except MAIN PATHIN_conv patient vlim_l e r fooof_results DEPTH label
+    clearvars -except MAIN PATHIN_conv patient vlim_l e r fooof_results DEPTH label SIDE 
 end
 
 %% Save fooof results
-save([MAIN '02_data' filesep '03_processed' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label');
+save([MAIN '02_data' filesep '03_processed' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label','SIDE');
