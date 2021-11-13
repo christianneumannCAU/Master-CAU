@@ -52,10 +52,12 @@ for p = 1:size(fooof_results,1)
                 fooof{x,5} = fooof_results{p,d}(c).aperiodic_params(2); %Exponent von der aperiodischen Komponente
                 
                 % create powerspectrum without aperiodic component
-                new_spec{x,1} = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
+                new_spec{x,1} = fooof_results{p,d}(c).fooofed_spectrum - fooof_results{p,d}(c).ap_fit;
                 
-                fooof{x,6} = trapz(fooof_results{p,d}(c).freqs(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<13),new_spec{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<13));
-                fooof{x,7} = trapz(fooof_results{p,d}(c).freqs(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<30),new_spec{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<30));
+                %alpha Power
+                fooof{x,6} = trapz(fooof_results{p,d}(c).freqs(fooof_results{p,d}(c).freqs>6&fooof_results{p,d}(c).freqs<12),new_spec{x,1}(fooof_results{p,d}(c).freqs>6&fooof_results{p,d}(c).freqs<12));
+                %beta Power
+                fooof{x,7} = trapz(fooof_results{p,d}(c).freqs(fooof_results{p,d}(c).freqs>12&fooof_results{p,d}(c).freqs<30),new_spec{x,1}(fooof_results{p,d}(c).freqs>12&fooof_results{p,d}(c).freqs<30));
                 x = x+1;
             end
         end
