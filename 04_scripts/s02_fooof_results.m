@@ -63,4 +63,6 @@ for p = 1:size(fooof_results,1)
         end
     end
 end
-    
+T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','AP_EXPONENT','ALPHA_POWER','BETA_POWER'}); 
+%% safe for R 
+writetable(T,'regression_table.csv');
