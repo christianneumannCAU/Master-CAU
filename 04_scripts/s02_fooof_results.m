@@ -23,19 +23,36 @@ cd([PATHIN_conv]);
 load('00_fooof_results.mat')
 
 %% fooof plot
-for p = 1:size(fooof_results,1) % p = patient
-    subplot(size(fooof_results,1),1,p)
-    for d = 1:size(fooof_results,2) % d = depth
-        for c = 1:length(fooof_results{p,d}) % c = channel
-            plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c,:).fooofed_spectrum);
-            hold on;
+% for p = 1:size(fooof_results,1) % p = patient
+%     subplot(size(fooof_results,1),1,p)
+%     for d = 1:size(fooof_results,2) % d = depth
+%         for c = 1:length(fooof_results{p,d}) % c = channel
+%             fooof_plot = plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c,:).fooofed_spectrum);
+%             hold on;
+%         end
+%     end
+%     str = p;
+%     title(str);
+%     xlabel 'Frequency [Hz]';
+%     ylabel 'fooofed spectrum';
+%     hold off;
+% end
+
+%% descriptive statistic
+% %variance 
+% vrc_hist        = cell2mat(vrc);
+% histogram(vrc_hist);
+
+%% counting errors
+errorcount = 0;
+for p = 1:size(error,1)
+    for d = 1:size(error,2)
+        if isempty(error{p,d})
+            continue
+        else
+            errorcount = errorcount +1;
         end
     end
-    str = p;
-    title(str);
-    xlabel 'Frequency [Hz]';
-    ylabel 'fooofed spectrum';
-    hold off;
 end
 
 %% create new table for regression
@@ -50,19 +67,28 @@ for p = 1:size(fooof_results,1)
                 fooof{x,3} = DEPTH{p,d}; 
                 fooof{x,4} = label{p,d}(c); 
                 fooof{x,5} = fooof_results{p,d}(c).aperiodic_params(2); %Exponent von der aperiodischen Komponente
+                 
+                %save first frequency bin from original spectrum
+                first_freq_o{p,d} = or_freq{p,d}(1);
+                % save first frequency bin from fooofed spectrum
+                first_freq_f{p,d} = fooof_results{p,d}(c).freqs(1);
+                dif_freq{p,d} = first_freq_f{p,d} - first_freq_o{p,d};
                 
-                % create powerspectrum without aperiodic component
-                new_spec{x,1} = fooof_results{p,d}(c).fooofed_spectrum - fooof_results{p,d}(c).ap_fit;
+                % create powerspectrum without aperiodic component with
+                % fooof 
+                fooofed_peaks{x,1} = fooof_results{p,d}(c).fooofed_spectrum - fooof_results{p,d}(c).ap_fit;
                 
-                %alpha Power
-                fooof{x,6} = trapz(fooof_results{p,d}(c).freqs(fooof_results{p,d}(c).freqs>6&fooof_results{p,d}(c).freqs<12),new_spec{x,1}(fooof_results{p,d}(c).freqs>6&fooof_results{p,d}(c).freqs<12));
-                %beta Power
-                fooof{x,7} = trapz(fooof_results{p,d}(c).freqs(fooof_results{p,d}(c).freqs>12&fooof_results{p,d}(c).freqs<30),new_spec{x,1}(fooof_results{p,d}(c).freqs>12&fooof_results{p,d}(c).freqs<30));
+                % theta Power
+                fooof{x,6} = mean(fooofed_peaks{x,1}(fooof_results{p,d}(c).freqs>5&fooof_results{p,d}(c).freqs<7));
+                % alpha Power
+                fooof{x,7} = mean(fooofed_peaks{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<12));
+                % beta Power
+                fooof{x,8} = mean(fooofed_peaks{x,1}(fooof_results{p,d}(c).freqs>12&fooof_results{p,d}(c).freqs<30));
                 x = x+1;
             end
         end
     end
 end
-T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','AP_EXPONENT','ALPHA_POWER','BETA_POWER'}); 
+T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','AP_EXPONENT','THETA_POWER','ALPHA_POWER','BETA_POWER'}); 
 %% safe for R 
 writetable(T,'regression_table.csv');
