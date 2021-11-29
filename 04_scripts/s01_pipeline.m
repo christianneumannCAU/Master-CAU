@@ -160,7 +160,7 @@ for p = 3:length(patient)
     %% Save in a patient-file
     save([MAIN '02_data' filesep '03_processed' filesep int2str(p-2) '_' patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
     %% clear for next loop
-    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq
+    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq TFR
 end
 
 %% Save fooof results

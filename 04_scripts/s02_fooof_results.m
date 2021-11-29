@@ -23,20 +23,52 @@ cd([PATHIN_conv]);
 load('00_fooof_results.mat')
 
 %% fooof plot
-% for p = 1:size(fooof_results,1) % p = patient
-%     subplot(size(fooof_results,1),1,p)
-%     for d = 1:size(fooof_results,2) % d = depth
-%         for c = 1:length(fooof_results{p,d}) % c = channel
-%             fooof_plot = plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c,:).fooofed_spectrum);
-%             hold on;
-%         end
-%     end
-%     str = p;
-%     title(str);
-%     xlabel 'Frequency [Hz]';
-%     ylabel 'fooofed spectrum';
-%     hold off;
-% end
+
+%normalize data
+l = 1;
+for p = 1:size(fooof_results,1) % p = patient
+    for d = 1:size(fooof_results,2) % d = depth
+        for c = 1:length(fooof_results{p,d}) % c = channel
+            if isempty(fooof_results{p,d}(c).power_spectrum)
+                continue
+            else
+                % normalize original spectrum
+                mnm_o{p,d}(c) = min(m{p,d}(c,:),[],'omitnan');
+                mxm_o{p,d}(c) = max(m{p,d}(c,:),[],'omitnan');
+                norm_o{p,d}(c,:) = (m{p,d}(c,:)- mnm_o{p,d}(c))/(mxm_o{p,d}(c) - mnm_o{p,d}(c));
+
+                % normalize fooofed spectrum
+                mnm_f{p,d}(c) = min(fooof_results{p,d}(c).power_spectrum,[],'omitnan');
+                mxm_f{p,d}(c) = max(fooof_results{p,d}(c).power_spectrum,[],'omitnan');
+                norm_f{p,d}(c,:) = (fooof_results{p,d}(c).power_spectrum - mnm_f{p,d}(c))/(mxm_f{p,d}(c) - mnm_f{p,d}(c));
+
+                % calculate difference between first power value of original
+                % spectrum and fooofed spectrum
+                dif_pow{p,d}(c) = abs(norm_f{p,d}(c,1) - norm_o{p,d}(c,1));
+
+                % calculate mean of negative space when the ap_fit is
+                % substracted from the powerspectrum
+                dif_o{p,d}(c,:) = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
+                neg_m{p,d}(c) = mean(dif_o{p,d}(dif_o{p,d}<0));
+
+                % plot for suspicious data
+                if dif_pow{p,d}(c) > 0.1|neg_m{p,d}(c) < -0.1
+                    subplot(size(DEPTH,1),size(DEPTH,2),l)
+                    plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).power_spectrum);
+                    %plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).fooofed_spectrum);
+                    hold on;
+                    plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).ap_fit);
+                    str = append(num2str(p),' ',DEPTH{p,d},' ',label{p,d}(c));
+                    title(str);
+                    xlabel 'Frequency [Hz]';
+                    ylabel 'power';
+                    hold off;
+                    l = l+1;
+                end    
+            end
+        end
+    end
+end
 
 %% descriptive statistic
 % %variance 
@@ -67,12 +99,6 @@ for p = 1:size(fooof_results,1)
                 fooof{x,3} = DEPTH{p,d}; 
                 fooof{x,4} = label{p,d}(c); 
                 fooof{x,5} = fooof_results{p,d}(c).aperiodic_params(2); %Exponent von der aperiodischen Komponente
-                 
-                %save first frequency bin from original spectrum
-                first_freq_o{p,d} = or_freq{p,d}(1);
-                % save first frequency bin from fooofed spectrum
-                first_freq_f{p,d} = fooof_results{p,d}(c).freqs(1);
-                dif_freq{p,d} = first_freq_f{p,d} - first_freq_o{p,d};
                 
                 % create powerspectrum without aperiodic component with
                 % fooof 
