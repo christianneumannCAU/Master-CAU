@@ -24,7 +24,6 @@ load('00_fooof_results.mat')
 
 %% fooof plot
 
-%normalize data
 l = 1;
 for p = 1:size(fooof_results,1) % p = patient
     for d = 1:size(fooof_results,2) % d = depth
@@ -32,28 +31,18 @@ for p = 1:size(fooof_results,1) % p = patient
             if isempty(fooof_results{p,d}(c).power_spectrum)
                 continue
             else
-                % normalize original spectrum
-                mnm_o{p,d}(c) = min(m{p,d}(c,:),[],'omitnan');
-                mxm_o{p,d}(c) = max(m{p,d}(c,:),[],'omitnan');
-                norm_o{p,d}(c,:) = (m{p,d}(c,:)- mnm_o{p,d}(c))/(mxm_o{p,d}(c) - mnm_o{p,d}(c));
-
-                % normalize fooofed spectrum
-                mnm_f{p,d}(c) = min(fooof_results{p,d}(c).power_spectrum,[],'omitnan');
-                mxm_f{p,d}(c) = max(fooof_results{p,d}(c).power_spectrum,[],'omitnan');
-                norm_f{p,d}(c,:) = (fooof_results{p,d}(c).power_spectrum - mnm_f{p,d}(c))/(mxm_f{p,d}(c) - mnm_f{p,d}(c));
-
                 % calculate difference between first power value of original
-                % spectrum and fooofed spectrum
-                dif_pow{p,d}(c) = abs(norm_f{p,d}(c,1) - norm_o{p,d}(c,1));
+                % spectrum and aperiodic component
+                dif_pow{p,d}(c) = abs(fooof_results{p,d}(c).power_spectrum(1) - fooof_results{p,d}(c).ap_fit(1));
 
                 % calculate mean of negative space when the ap_fit is
                 % substracted from the powerspectrum
-                dif_o{p,d}(c,:) = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
-                neg_m{p,d}(c) = mean(dif_o{p,d}(dif_o{p,d}<0));
+                dif_neg{p,d}(c,:) = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
+                neg_m{p,d}(c) = mean(dif_neg{p,d}(dif_neg{p,d}<0));
 
                 % plot for suspicious data
-                if dif_pow{p,d}(c) > 0.1|neg_m{p,d}(c) < -0.1
-                    subplot(size(DEPTH,1),size(DEPTH,2),l)
+                if dif_pow{p,d}(c) > 0.6|neg_m{p,d}(c) < -0.1
+                    subplot(size(DEPTH,2),3,l)
                     plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).power_spectrum);
                     %plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).fooofed_spectrum);
                     hold on;
@@ -102,7 +91,7 @@ for p = 1:size(fooof_results,1)
                 
                 % create powerspectrum without aperiodic component with
                 % fooof 
-                fooofed_peaks{x,1} = fooof_results{p,d}(c).fooofed_spectrum - fooof_results{p,d}(c).ap_fit;
+                fooofed_peaks{x,1} = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
                 
                 % theta Power
                 fooof{x,6} = mean(fooofed_peaks{x,1}(fooof_results{p,d}(c).freqs>5&fooof_results{p,d}(c).freqs<7));

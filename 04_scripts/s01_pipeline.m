@@ -136,9 +136,9 @@ for p = 3:length(patient)
         %python from anaconda does not work)
 
         settings                    = []; 
-        settings.peak_width_limits  = [1.5 12]; %minimum and maximum widths of etracted peaks
+        settings.peak_width_limits  = [0.5 12]; %minimum and maximum widths of etracted peaks
         settings.peak_threshold     = 2; %standard deviation of the aperiodic-removed powerspectrum, above which a data point must pass to be considered a candidate peak
-        f_range                     = [2 30]; %fitting range
+        f_range                     = [4 30]; %fitting range
         return_model                = 1; 
         freqs{d}                    = TFR{d}.freq;
 
@@ -160,8 +160,8 @@ for p = 3:length(patient)
     %% Save in a patient-file
     save([MAIN '02_data' filesep '03_processed' filesep int2str(p-2) '_' patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
     %% clear for next loop
-    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq TFR
+    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq
 end
 
 %% Save fooof results
-save([MAIN '02_data' filesep '03_processed' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label','SIDE','vrc','error','m','or_freq');
+save([MAIN '02_data' filesep '03_processed' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label','SIDE','vrc','error','or_freq');
