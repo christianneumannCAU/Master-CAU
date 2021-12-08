@@ -18,13 +18,27 @@ set(0,'defaultfigurecolor',[1 1 1]);
 % Go to Folder with data 
 %(needs to be in the same folder as the script-folder)
 %(see git for the structure of the folders)
-PATHIN_conv = [MAIN '02_data' filesep '02_test' filesep];
+PATHIN_conv = [MAIN '02_data' filesep '01_converteddata' filesep];
 cd([PATHIN_conv]);
 patient     = dir;
+
+% clean and sort patient structure
+patient([1,2],:) = [];
+for s = 1:length(patient)
+    patient(s).name = str2num(patient(s).name);
+end
+T       = struct2table(patient);
+patient = sortrows(T);
+patient = table2struct(patient);
+for s = 1:length(patient)
+    patient(s).name = num2str(patient(s).name);
+end
+clear T s;
 
 %% define variables
 % define lower boundary for variance
 vlim_l          = 0.001;
+
 % empty structures
 data            = [];
 data_FFT        = [];
@@ -33,18 +47,19 @@ m               = [];
 fooof_results   = [];
 
 %% loop through every patient
-for p = 3:length(patient)
+for p = 1:length(patient)
     
     cd([PATHIN_conv patient(p).name filesep]); % switch to a patient
-    indat = dir('*.mat'); 
-    DEPTH(p-2,1:length(indat)) = extractBetween({indat.name},'D','F'); % extract Depth from filename
-    SIDE(p-2,1:length(indat)) = extract({indat.name},1); % extract Side from filename (does not work with Matlab R2018b, use extractBefore)
+    indat = dir('*.mat');     
+    DEPTH(p,1:length(indat)) = extractBetween({indat.name},'D','F'); % extract Depth from filename
+    SIDE(p,1:length(indat)) = extract({indat.name},1); % extract Side from filename (does not work with Matlab R2018b, use extractBefore)
     TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3); % extract Trajectory from filename
     
     %% loop every file (Depth) in folder for one patient
     for d = 1:length(indat)
         
-        error{p-2,d} = []; % prepare empty cell for error structure
+        % preparing search for errors
+        error{p,d}      = cell(1,5);
         
         %% read data + reject trials without data or with artefacts
         % read data
@@ -71,27 +86,26 @@ for p = 3:length(patient)
 
             % split data and calculate variance
 
-            vrc{p-2,d}(c,1) = var(norm_raw{d}(c,1:ceil(end/4)));               % first quarter
-            vrc{p-2,d}(c,2) = var(norm_raw{d}(c,ceil(end/4):ceil(end/2)));     % second quarter
-            vrc{p-2,d}(c,3) = var(norm_raw{d}(c,ceil(end/2):ceil(end*0.75)));  % third quarter
-            vrc{p-2,d}(c,4) = var(norm_raw{d}(c,ceil(end*0.75):end));          % fourth quarter 
-
+            vrc{p,d}(c,1) = var(norm_raw{d}(c,1:ceil(end/4)));               % first quarter
+            vrc{p,d}(c,2) = var(norm_raw{d}(c,ceil(end/4):ceil(end/2)));     % second quarter
+            vrc{p,d}(c,3) = var(norm_raw{d}(c,ceil(end/2):ceil(end*0.75)));  % third quarter
+            vrc{p,d}(c,4) = var(norm_raw{d}(c,ceil(end*0.75):end));          % fourth quarter 
+            
             % replace data with nan if variance is smaller than 0.001
-            if (vrc{p-2,d}(c,1) < vlim_l) || (vrc{p-2,d}(c,2) < vlim_l) || (vrc{p-2,d}(c,3) < vlim_l) || (vrc{p-2,d}(c,4) < vlim_l)             
+            if (vrc{p,d}(c,1) < vlim_l) || (vrc{p,d}(c,2) < vlim_l) || (vrc{p,d}(c,3) < vlim_l) || (vrc{p,d}(c,4) < vlim_l)             
                 data{d}.trial{1}(c,:) = nan(size(data{d}.trial{1}(c,:)));
-                error{p-2,d}          = 'artefacts found';
+                error{p,d}(c)          = cellstr('artefacts found');
             end
             
             % replace data with nan if there are less than 1280 samplepoints in
             % Trial
             if length(data{d}.trial{1}) < 1280
-                if isempty(error) 
-                    data{d}.trial{1}(c,:)   = nan(size(data{d}.trial{1}(c,:)));
-                    error{p-2,d}            = 'not enough samplepoints';
+                if isempty(error{p,d}{1,c})
+                    data{d}.trial{1}(c,:)   = nan(size(data{d}.trial{1}(c,:)));   
+                    error{p,d}(c)          = cellstr('not enough samplepoints');
                 end
             end
         end
-
         %% FFT
         % preprocessing
         cfg             = [];
@@ -107,9 +121,6 @@ for p = 3:length(patient)
         try
             data_FFT{d}             = ft_preprocessing(cfg,data{d}); 
         catch ME
-            if isempty(error)
-                error{p-2,d}        = 'filtering didnt work';
-            end
             continue
         end
 
@@ -125,10 +136,10 @@ for p = 3:length(patient)
         TFR{d}          = ft_freqanalysis(cfg,data_FFT{d});
         
         % save frequency bins from original spectrum
-        or_freq{p-2,d}  = TFR{d}.freq;
+        or_freq{p,d}  = TFR{d}.freq;
         
         %% calculate powerspectrum
-        m{p-2,d}            = mean(TFR{d}.powspctrm,[3],'omitnan'); %avarege powerspectrum over time
+        m{p,d}            = mean(TFR{d}.powspctrm,[3],'omitnan'); %avarege powerspectrum over time
         
         %% FOOOF
         %make sure, that the version of python in cmd and in matlab match each
@@ -143,24 +154,21 @@ for p = 3:length(patient)
         freqs{d}                    = TFR{d}.freq;
 
         for c = 1:length(data_FFT{d}.label)
-            power_spectrum{d}(c,:) = m{p-2,d}(c,:);
+            power_spectrum{d}(c,:) = m{p,d}(c,:);
             try
-                fooof_results{p-2,d}(c,:) = fooof(freqs{d}, power_spectrum{d}(c,:) , f_range ,settings , return_model);
+                fooof_results{p,d}(c,:) = fooof(freqs{d}, power_spectrum{d}(c,:) , f_range ,settings , return_model);
             catch ME
-                if isempty(error)
-                    error{p-2,d}         = 'fooof didnt work';
-                end
                 continue
             end
         end
         
         %% create structure for label
-        label{p-2,d} = data{d}.label;
+        label{p,d} = data{d}.label;
     end
     %% Save in a patient-file
-    save([MAIN '02_data' filesep '03_processed' filesep int2str(p-2) '_' patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
+    save([MAIN '02_data' filesep '03_processed' filesep patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
     %% clear for next loop
-    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq
+    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq e
 end
 
 %% Save fooof results

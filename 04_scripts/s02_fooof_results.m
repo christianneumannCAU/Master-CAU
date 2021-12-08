@@ -1,4 +1,5 @@
 %% Startup
+
 clear all;  %remove all variables from current workspace
 close all;  %close all plots
 clc;        %clear all text from command window 
@@ -23,14 +24,21 @@ cd([PATHIN_conv]);
 load('00_fooof_results.mat')
 
 %% counting errors from s01_pipeline
+
 errorcount_1 = 0;
 errorcount_2 = 0; % for later; counts channel that got deleted because of a bad fit
 for p = 1:size(error,1)
     for d = 1:size(error,2)
-        if isempty(error{p,d})
-            continue
-        else
-            errorcount_1 = errorcount_1 +1;
+        for c = 1:3
+            if isempty(error{p,d})
+                continue
+            else
+                if isempty(error{p,d}{1,c})
+                    continue
+                else
+                    errorcount_1 = errorcount_1 +1;
+                end
+            end
         end
     end
 end
@@ -114,13 +122,26 @@ end
 
 T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','AP_EXPONENT','THETA_POWER','ALPHA_POWER','BETA_POWER'}); 
 clear 'fooof';
+
+% delete Channels with negative powers
+errorcount_3 = 1;
+c = 1;
+while c ~= height(T)
+    if (T.THETA_POWER(c) < 0) | (T.ALPHA_POWER(c) < 0) | (T.BETA_POWER(c) < 0)
+        T(c,:) = [];
+        errorcount_3 = errorcount_3 + 1;
+    else
+        c = c+1;
+    end
+end
+
 %% safe for R 
 writetable(T,'regression_table.csv');
 
 %% descriptive statistic
-% %variance 
-% vrc_hist        = cell2mat(vrc);
-% histogram(vrc_hist);
+% variance 
+vrc = cat(1,vrc{:});
+histogram(vrc,0.00001:0.00098:0.15);
 
 %% cleaning up 
 clear 'c' 'd' 'DEPTH' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x'
