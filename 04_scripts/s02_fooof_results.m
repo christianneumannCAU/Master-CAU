@@ -19,7 +19,7 @@ set(0,'defaultfigurecolor',[1 1 1]);
 % Go to Folder with fooof_results 
 %(needs to be in the same folder as the script-folder)
 %(see git for the structure of the folders)
-PATHIN_conv = [MAIN '02_data' filesep '03_processed' filesep];
+PATHIN_conv = [MAIN '02_data' filesep '04_final' filesep];
 cd([PATHIN_conv]);
 load('00_fooof_results.mat')
 
