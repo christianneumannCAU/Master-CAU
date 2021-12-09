@@ -18,7 +18,7 @@ set(0,'defaultfigurecolor',[1 1 1]);
 % Go to Folder with data 
 %(needs to be in the same folder as the script-folder)
 %(see git for the structure of the folders)
-PATHIN_conv = [MAIN '02_data' filesep '01_converteddata' filesep];
+PATHIN_conv = [MAIN '02_data' filesep '01_converted' filesep];
 cd([PATHIN_conv]);
 patient     = dir;
 
@@ -172,4 +172,4 @@ for p = 1:length(patient)
 end
 
 %% Save fooof results
-save([MAIN '02_data' filesep '03_processed' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label','SIDE','vrc','error','or_freq');
+save([MAIN '02_data' filesep '04_final' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label','SIDE','vrc','error','or_freq');
