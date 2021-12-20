@@ -33,4 +33,4 @@ end
 tab_reg.CHANNEL     = lower(strrep(extractAfter(tab_reg.CHANNEL,'CRAW_'),'__','')); 
 tab_reg.abs_depth   = abs(tab_reg.DEPTH);
 
-writetable(tab_reg,fullfile(PATHIN_stats,'norm_data.csv'));
+%writetable(tab_reg,fullfile(PATHIN_stats,'norm_data.csv'));
