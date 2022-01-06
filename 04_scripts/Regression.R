@@ -1,30 +1,68 @@
-## read data
+## Set libraries ##
+library(ggplot2)
+library(ggpubr)
+library(moments)
+library(nlme)
+
+
+## read data ##
 rg_tab <- read.csv("C:/Users/acer/Desktop/Master CAU/02_data/04_final/regression_table.csv")
 
-## Add new variable for distance to STN
+
+## Add new variable for distance to STN ##
 rg_tab$distance <- abs(rg_tab$DEPTH)
 
-## Test for normal distribution is bad: gets significant automatically with big samplesize
+
+## Assign data types ##
+rg_tab$ID <- as.factor(rg_tab$ID)
+rg_tab$SIDE <- as.factor(rg_tab$SIDE)
+rg_tab$CHANNEL <- as.factor(rg_tab$CHANNEL)
+
+
+## Test for normal distribution is bad: gets significant automatically with big samplesize ##
 shapiro.test(rg_tab$AP_EXPONENT)
 
-## visualizing data
+
+## visualizing data ##
+
+# AP_EXPONENT
 hist(rg_tab$AP_EXPONENT)
 qqnorm(rg_tab$AP_EXPONENT)
 qqline(rg_tab$AP_EXPONENT)
 
+ggdensity(rg_tab, x = "AP_EXPONENT", fill = "lightgray", title = "AP Exponent") +
+  scale_x_continuous(limits = c(-2, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+# THETA_POWER
 hist(rg_tab$THETA_POWER)
 qqnorm(rg_tab$THETA_POWER)
 qqline(rg_tab$THETA_POWER)
 
+ggdensity(rg_tab, x = "THETA_POWER", fill = "lightgray", title = "Theta") +
+  scale_x_continuous(limits = c(-1, 2)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+# ALPHA_POWER
 hist(rg_tab$ALPHA_POWER)
 qqnorm(rg_tab$ALPHA_POWER)
 qqline(rg_tab$ALPHA_POWER)
 
+ggdensity(rg_tab, x = "ALPHA_POWER", fill = "lightgray", title = "Alpha") +
+  scale_x_continuous(limits = c(-1, 2)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+# BETA_POWER
 hist(rg_tab$BETA_POWER)
 qqnorm(rg_tab$BETA_POWER)
 qqline(rg_tab$BETA_POWER)
 
-## try z-transformation
+ggdensity(rg_tab, x = "BETA_POWER", fill = "lightgray", title = "Beta") +
+  scale_x_continuous(limits = c(-1, 2)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+
+## try z-transformation ##
 for(i in 1:30) {
   idx <-  rg_tab$ID == i
   rg_tab$z_exp[idx] <- scale(rg_tab$AP_EXPONENT[idx])
@@ -33,53 +71,85 @@ for(i in 1:30) {
   rg_tab$z_beta[idx] <- scale(rg_tab$BETA_POWER[idx])
 }
 
-## visualizing z data
+
+## visualizing z data ##
+
+# AP_EXPONENT
 hist(rg_tab$z_exp)
 qqnorm(rg_tab$z_exp)
 qqline(rg_tab$z_exp)
-shapiro.test(rg_tab$z_exp)
 
+ggdensity(rg_tab, x = "z_exp", fill = "lightgray", title = "AP Exponent") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+# THETA_POWER
 hist(rg_tab$z_theta)
 qqnorm(rg_tab$z_theta)
 qqline(rg_tab$z_theta)
 
+ggdensity(rg_tab, x = "z_theta", fill = "lightgray", title = "Theta") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+# ALPHA_POWER
 hist(rg_tab$z_alpha)
 qqnorm(rg_tab$z_alpha)
 qqline(rg_tab$z_alpha)
 
+ggdensity(rg_tab, x = "z_alpha", fill = "lightgray", title = "Alpha") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+# BETA_POWER
 hist(rg_tab$z_beta)
 qqnorm(rg_tab$z_beta)
 qqline(rg_tab$z_beta)
 
-# try transforming exept ap_exp
-rg_tab$t_exp <- sqrt(max(rg_tab$z_exp+1) - rg_tab$z_exp) # square-root/ negatively skewed data
-rg_tab$t_theta <- 1/(rg_tab$z_theta+4) # inverse/ positively skewed data
-rg_tab$t_alpha <- 1/(rg_tab$z_alpha+6) # inverse/ positively skewed data
-rg_tab$t_beta <- log10(rg_tab$z_beta+4) # log/ positively skewed data
+ggdensity(rg_tab, x = "z_beta", fill = "lightgray", title = "Beta") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
 
-## visualizing log data
-hist(rg_tab$t_exp)
-qqnorm(rg_tab$t_exp)
-qqline(rg_tab$t_exp)
-shapiro.test(rg_tab$t_exp)
+### That made it better and good
 
-hist(rg_tab$t_theta)
-qqnorm(rg_tab$t_theta)
-qqline(rg_tab$t_theta)
-shapiro.test(rg_tab$t_theta)
 
-hist(rg_tab$t_alpha)
-qqnorm(rg_tab$t_alpha)
-qqline(rg_tab$t_alpha)
-shapiro.test(rg_tab$t_alpha)
+## try log-transformation ##
+rg_tab$l_theta <- log10(rg_tab$THETA_POWER)
+rg_tab$l_alpha <- log10(rg_tab$ALPHA_POWER)
+rg_tab$l_beta <- log10(rg_tab$BETA_POWER)
 
-hist(rg_tab$t_beta)
-qqnorm(rg_tab$t_beta)
-qqline(rg_tab$t_beta)
-shapiro.test(rg_tab$t_beta)
 
-# correlation between distance and beta
+## visualizing log data ##
 
-# Regression
-testmodel <- lm(DEPTH~AP_EXPONENT, data = rg_tab)
-summary(testmodel)
+# THETA_POWER
+ggdensity(rg_tab, x = "l_theta", fill = "lightgray", title = "Theta") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+# ALPHA_POWER
+ggdensity(rg_tab, x = "l_alpha", fill = "lightgray", title = "Alpha") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+# BETA_POWER
+ggdensity(rg_tab, x = "l_beta", fill = "lightgray", title = "Beta") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+### that made it worse
+
+
+## correlation between distance and beta ##
+
+## Regression ##
+norm_exp <- lme(fixed=DEPTH ~ AP_EXPONENT, random=~1|ID, data = rg_tab)
+summary(norm_exp)
+anova(norm_exp)
+
+z_exp <- lme(fixed=DEPTH ~ z_exp, random=~1|ID, data = rg_tab)
+summary(z_exp)
+anova(z_exp)
+
+full_model <- lme(fixed=DEPTH ~ z_exp + z_theta + z_alpha + z_beta, random=~1|ID, data=rg_tab)
+summary(full_model)
+anova(full_model)
