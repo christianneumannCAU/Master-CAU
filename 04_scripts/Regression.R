@@ -156,7 +156,7 @@ ggscatter(rg_tab, x = "distance", y = "z_beta", add = "reg.line",
 # kendall correlation which is non-parametric (spearman has issues with ties)
 H <- cor.test(rg_tab$distance,rg_tab$z_beta, method = "kendall")
 H
-### no significant correlation between beta and distance to STN (explore: maybe within a patient?)
+### no significant correlation between beta and distance to STN 
 
 ## exploring ##
 # regression is robust (source), data is close to normal distribution
