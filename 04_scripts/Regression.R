@@ -4,7 +4,6 @@ library(ggpubr)
 library(moments)
 library(nlme)
 
-
 ## read data ##
 rg_tab <- read.csv("C:/Users/acer/Desktop/Master CAU/02_data/04_final/regression_table.csv")
 
@@ -141,15 +140,27 @@ ggdensity(rg_tab, x = "l_beta", fill = "lightgray", title = "Beta") +
 
 ## correlation between distance and beta ##
 
-## Regression ##
-norm_exp <- lme(fixed=DEPTH ~ AP_EXPONENT, random=~1|ID, data = rg_tab)
-summary(norm_exp)
-anova(norm_exp)
+# we can't assume normal distribution for distance
+hist(rg_tab$distance)
+qqnorm(rg_tab$distance)
+qqline(rg_tab$distance)
 
-z_exp <- lme(fixed=DEPTH ~ z_exp, random=~1|ID, data = rg_tab)
-summary(z_exp)
-anova(z_exp)
+ggdensity(rg_tab, x = "distance", fill = "lightgray", title = "Distance to STN") +
+  scale_x_continuous(limits = c(-20, 20)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
 
+#visualize data
+ggscatter(rg_tab, x = "distance", y = "z_beta", add = "reg.line", 
+          conf.int = T, cor.coef = T, cor.method = "spearman", xlab = "distance to STN", ylab = "beta power")
+
+# kendall correlation which is non-parametric (spearman has issues with ties)
+H <- cor.test(rg_tab$distance,rg_tab$z_beta, method = "kendall")
+H
+### no significant correlation between beta and distance to STN (explore: maybe within a patient?)
+
+## exploring ##
+# regression is robust (source), data is close to normal distribution
 full_model <- lme(fixed=DEPTH ~ z_exp + z_theta + z_alpha + z_beta, random=~1|ID, data=rg_tab)
 summary(full_model)
 anova(full_model)
+coef(full_model)
