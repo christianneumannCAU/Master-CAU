@@ -5,7 +5,7 @@ library(moments)
 library(nlme)
 
 ## read data ##
-rg_tab <- read.csv("C:/Users/acer/Desktop/Master CAU/02_data/04_final/regression_table.csv")
+rg_tab <- read.csv("../02_data/04_final/regression_table.csv")
 
 
 ## Add new variable for distance to STN ##
