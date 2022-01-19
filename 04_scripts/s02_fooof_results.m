@@ -101,26 +101,31 @@ for p = 1:size(fooof_results,1)
                 fooof{x,1} = p; %id
                 fooof{x,2} = SIDE{p,d};  
                 fooof{x,3} = DEPTH{p,d}; 
-                fooof{x,4} = label{p,d}(c); 
-                fooof{x,5} = fooof_results{p,d}(c).aperiodic_params(2); %Exponent von der aperiodischen Komponente
+                fooof{x,4} = label{p,d}(c);                 
+                fooof{x,5} = samples{p,d}(2); %number of samplepoints 
+                fooof{x,6} = fooof_results{p,d}(c).aperiodic_params(2); %Exponent von der aperiodischen Komponente
                 
                 % create powerspectrum without aperiodic component with
                 % fooof 
                 spectrum_wo_ap{x,1} = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
                 
                 % theta Power
-                fooof{x,6} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>5&fooof_results{p,d}(c).freqs<7));
+                fooof{x,7} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>5&fooof_results{p,d}(c).freqs<7));
                 % alpha Power
-                fooof{x,7} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<12));
+                fooof{x,8} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<12));
                 % beta Power
-                fooof{x,8} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>12&fooof_results{p,d}(c).freqs<30));
+                fooof{x,9} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>12&fooof_results{p,d}(c).freqs<30));
+                % root_mean_square
+                fooof{x,10} = rms(signal{p,d}{1}(c));
+                
                 x = x+1;
+                
             end
         end
     end
 end
 
-T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','AP_EXPONENT','THETA_POWER','ALPHA_POWER','BETA_POWER'}); 
+T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','SAMPLES','AP_EXPONENT','THETA_POWER','ALPHA_POWER','BETA_POWER','root_mean_square'}); 
 clear 'fooof';
 
 % delete Channels with negative powers
@@ -135,8 +140,36 @@ while c ~= height(T)
     end
 end
 
+%% add z-transformed data + build 2 groups for near/far from target
+
+nms_ids = unique(T.ID); % find all participants
+for s = 1:numel(nms_ids)
+    idx_sub = T.ID == nms_ids(s);
+    
+    T.z_exp(idx_sub)        = zscore(T.AP_EXPONENT(idx_sub));
+    T.z_theta(idx_sub)      = zscore(T.THETA_POWER(idx_sub));
+    T.z_alpha(idx_sub)      = zscore(T.ALPHA_POWER(idx_sub));
+    T.z_beta(idx_sub)       = zscore(T.BETA_POWER(idx_sub));
+    T.z_rms(idx_sub)        = zscore(T.root_mean_square(idx_sub));
+    
+    beta_id{s}      = T.z_beta(idx_sub);
+    exp_id{s}       = T.z_exp(idx_sub);
+    rms_id{s}       = T.z_rms(idx_sub);
+    depth_id{s}     = str2double(T.DEPTH(idx_sub));
+    
+    target{s,1}     = beta_id{s}(dsearchn(depth_id{s},0));
+    target{s,2}     = beta_id{s}(dsearchn(depth_id{s},10));
+    target{s,3}     = exp_id{s}(dsearchn(depth_id{s},0));
+    target{s,4}     = exp_id{s}(dsearchn(depth_id{s},10));
+    target{s,5}     = rms_id{s}(dsearchn(depth_id{s},0));
+    target{s,6}     = rms_id{s}(dsearchn(depth_id{s},10));
+end
+target_dist_idx = cell2table(target,'VariableNames',{'near_beta','far_beta','near_exp','far_exp','near_rms','far_rms'}); 
+clear 'target';
+
 %% safe for R 
 writetable(T,'regression_table.csv');
+writetable(target_dist_idx,'ttest_table.csv');
 
 %% descriptive statistic
 % variance 
@@ -144,6 +177,6 @@ vrc = cat(1,vrc{:});
 histogram(vrc,0.00001:0.00098:0.15);
 
 %% cleaning up 
-clear 'c' 'd' 'DEPTH' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x'
+clear 'c' 'd' 'DEPTH' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'exp_id' 'nms_ids' 'beta_id' 'depth_id' 'idx_sub' 'rms_id'
 
 
