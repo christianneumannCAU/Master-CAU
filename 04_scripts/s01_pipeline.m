@@ -162,14 +162,16 @@ for p = 1:length(patient)
             end
         end
         
-        %% create structure for label
-        label{p,d} = data{d}.label;
+        %% create structures for label, trial_data and samplesize
+        label{p,d}      = data{d}.label;
+        signal{p,d}     = data_FFT{d}.trial;
+        samples{p,d}    = data_FFT{d}.sampleinfo;
     end
     %% Save in a patient-file
     save([MAIN '02_data' filesep '03_processed' filesep patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
     %% clear for next loop
-    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq e
+    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq e signal samples
 end
 
 %% Save fooof results
-save([MAIN '02_data' filesep '04_final' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label','SIDE','vrc','error','or_freq');
+save([MAIN '02_data' filesep '04_final' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label','SIDE','vrc','error','or_freq','signal','samples');
