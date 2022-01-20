@@ -6,7 +6,7 @@ library(nlme)
 
 ## read data ##
 rg_tab <- read.csv("../02_data/04_final/regression_table.csv")
-
+tt_tab <- read.csv("../02_data/04_final/ttest_table.csv")
 
 ## Add new variable for distance to target (got determined by MRT beforehand - the Depth 0 is the target)##
 rg_tab$distance <- abs(rg_tab$DEPTH)
@@ -60,15 +60,14 @@ ggdensity(rg_tab, x = "BETA_POWER", fill = "lightgray", title = "Beta") +
   scale_x_continuous(limits = c(-1, 2)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
+# root mean square
+hist(rg_tab$root_mean_square)
+qqnorm(rg_tab$root_mean_square)
+qqline(rg_tab$root_mean_square)
 
-## try z-transformation ##
-for(i in 1:30) {
-  idx <-  rg_tab$ID == i
-  rg_tab$z_exp[idx] <- scale(rg_tab$AP_EXPONENT[idx])
-  rg_tab$z_theta[idx] <- scale(rg_tab$THETA_POWER[idx])
-  rg_tab$z_alpha[idx] <- scale(rg_tab$ALPHA_POWER[idx])
-  rg_tab$z_beta[idx] <- scale(rg_tab$BETA_POWER[idx])
-}
+ggdensity(rg_tab, x = "root_mean_square", fill = "lightgray", title = "root_mean_square") +
+  scale_x_continuous(limits = c(-2, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
 
 
 ## visualizing z data ##
@@ -109,6 +108,16 @@ ggdensity(rg_tab, x = "z_beta", fill = "lightgray", title = "Beta") +
   scale_x_continuous(limits = c(-5, 5)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
+# root mean square
+hist(rg_tab$z_rms)
+qqnorm(rg_tab$z_rms)
+qqline(rg_tab$z_rms)
+
+ggdensity(rg_tab, x = "z_rms", fill = "lightgray", title = "root mean square") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+
 ### That made it better and good
 
 
@@ -145,7 +154,7 @@ hist(rg_tab$distance)
 qqnorm(rg_tab$distance)
 qqline(rg_tab$distance)
 
-ggdensity(rg_tab, x = "distance", fill = "lightgray", title = "Distance to STN") +
+ggdensity(rg_tab, x = "distance", fill = "lightgray", title = "Distance to target") +
   scale_x_continuous(limits = c(-20, 20)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
@@ -170,7 +179,7 @@ summary(full_model_depth)
 anova(full_model_depth)
 #aperiodic exponent is significant! 
 ggscatter(rg_tab, x = "DEPTH", y = "z_exp", add = "reg.line", 
-          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "distance to STN", ylab = "aperiodic exponent")
+          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "depth of electrode", ylab = "aperiodic exponent")
 #Ein deutlich niedrigerer aperiodischer Exponent bei -5, FALLS 0 die Spitze der Elektrode ist,
 #dann wäre -5 exakt da, wo die Elektrode sich genau im STN befindet (IST DAS SO?)
 # (Theta auch)
