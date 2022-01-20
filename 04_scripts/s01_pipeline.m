@@ -45,8 +45,7 @@ data_FFT        = [];
 TFR             = [];
 m               = [];
 fooof_results   = [];
-rootmeansquare  = [];
-
+    
 %% loop through every patient
 for p = 1:length(patient)
     
@@ -62,27 +61,22 @@ for p = 1:length(patient)
         % preparing search for errors
         error{p,d}      = cell(1,5);
         
-        %% read data
+        %% read LFP-data
         cfg         = [];
         cfg.dataset = [PATHIN_conv patient(p).name filesep indat(d).name];
         data{d}     = ft_preprocessing(cfg);        % read data unfiltered
         
-        %% raw data and rms for spike-activity
-        cfg             = [];
-        cfg.bpfilter    = 'yes';
-        cfg.bpfreq      = [300 3000];           %bandpass-filter
-        cfg.bpfilttype  = 'firws';
+        %% read raw data and calculate rms for spike-activity
         
-        try
-            data_spikes{d}   = ft_preprocessing(cfg,data{d});
-        catch ME
-            continue
+        load(indat(d).name);
+        raw{d}      = [];
+        for c = 1:length(data{d}.label)
+            chans{d}(c)     = append('CSPK',extractAfter(data{d}.label(c),4));
+            name            = string(chans{d}(c));
+            raw{d}(c,:)     = eval(name);
+            rmsd{p,d}(c)    = rms(raw{d}(c,:));
         end
-        
-        for c = 1:length(data{d}.label) 
-            rootmeansquare{p,d}(c) = rms(data_spikes{d}.trial{1}(c,:));
-        end
-        
+
         %% downsampling
         cfg             = [];
         cfg.resamplefs  = 512;
@@ -186,8 +180,8 @@ for p = 1:length(patient)
     %% Save in a patient-file
     save([MAIN '02_data' filesep '03_processed' filesep patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
     %% clear for next loop
-    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq e samples rootmeansquare 
+    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq e samples rmsd 
 end
 
 %% Save fooof results
-save([MAIN '02_data' filesep '04_final' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label','SIDE','vrc','error','or_freq','samples','rootmeansquare');
+save([MAIN '02_data' filesep '04_final' filesep '00_fooof_results.mat'],'fooof_results','DEPTH','label','SIDE','vrc','error','or_freq','samples','rmsd');

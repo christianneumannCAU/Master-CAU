@@ -15,11 +15,11 @@ for f = 1:numel(nms_data)
     tvec_lfp    = linspace(0,numel(lfp)/srate_lfp,numel(lfp));
     tvec_raw    = linspace(0,numel(raw)/srate_raw,numel(raw));
     subplot(2,2,cp)
-    rms = rmsd_lfp(raw);
+    rmsd = rms(raw);
     plot(tvec_raw,raw)
         xlabel 'Time [s]'
         ylabel '\muV'
-        title (strjoin(['Depth: ' extractBetween(nms_data(f),'D','F') ', RMS ' num2str(rms)],''))
+        title (strjoin(['Depth: ' extractBetween(nms_data(f),'D','F') ', RMS ' num2str(rmsd)],''))
         axis tight
         cp = cp+1;
     

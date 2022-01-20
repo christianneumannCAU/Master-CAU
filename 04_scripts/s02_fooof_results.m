@@ -116,7 +116,7 @@ for p = 1:size(fooof_results,1)
                 % beta Power
                 fooof{x,9} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>12&fooof_results{p,d}(c).freqs<30));
                 % root_mean_square
-                fooof{x,10} = rootmeansquare{p,d}(c);
+                fooof{x,10} = rmsd{p,d}(c);
                 
                 x = x+1;
                 
@@ -129,7 +129,7 @@ T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','SAMPLES','A
 clear 'fooof';
 
 % delete Channels with negative powers
-errorcount_3 = 1;
+errorcount_3 = 0;
 c = 1;
 while c ~= height(T)
     if (T.THETA_POWER(c) < 0) | (T.ALPHA_POWER(c) < 0) | (T.BETA_POWER(c) < 0)
@@ -158,11 +158,11 @@ for s = 1:numel(nms_ids)
     depth_id{s}     = str2double(T.DEPTH(idx_sub));
     
     target{s,1}     = beta_id{s}(dsearchn(depth_id{s},0));
-    target{s,2}     = beta_id{s}(dsearchn(depth_id{s},10));
+    target{s,2}     = beta_id{s}(dsearchn(depth_id{s},8.5));
     target{s,3}     = exp_id{s}(dsearchn(depth_id{s},0));
-    target{s,4}     = exp_id{s}(dsearchn(depth_id{s},10));
+    target{s,4}     = exp_id{s}(dsearchn(depth_id{s},8.5));
     target{s,5}     = rms_id{s}(dsearchn(depth_id{s},0));
-    target{s,6}     = rms_id{s}(dsearchn(depth_id{s},10));
+    target{s,6}     = rms_id{s}(dsearchn(depth_id{s},8.5));
     
 end
 target_dist_idx = cell2table(target,'VariableNames',{'near_beta','far_beta','near_exp','far_exp','near_rms','far_rms'}); 
@@ -178,4 +178,4 @@ vrc = cat(1,vrc{:});
 histogram(vrc,0.00001:0.00098:0.15);
 
 %% cleaning up 
-clear 'c' 'd' 'DEPTH' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'exp_id' 'nms_ids' 'beta_id' 'depth_id' 'idx_sub' 'rms_id'
+clear 'c' 'd' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'exp_id' 'nms_ids' 'beta_id' 'depth_id' 'idx_sub' 'rms_id'
