@@ -118,7 +118,7 @@ ggdensity(rg_tab, x = "z_rms", fill = "lightgray", title = "root mean square") +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
 
-### That made it better and good
+### That made it better and good, exept for rms
 
 
 ## try log-transformation ##
@@ -147,41 +147,55 @@ ggdensity(rg_tab, x = "l_beta", fill = "lightgray", title = "Beta") +
 ### that made it worse
 
 
-## correlation between distance and beta ##
+## compare rms, aperiodic exponent and beta near target with far from target
 
-# we can't assume normal distribution for distance
-hist(rg_tab$distance)
-qqnorm(rg_tab$distance)
-qqline(rg_tab$distance)
+# check normal distribution of difference for paired t-test
+dif_beta <- tt_tab$far_beta - tt_tab$near_beta
+dif_exp <- tt_tab$far_exp - tt_tab$near_exp
+dif_rms <- tt_tab$far_rms - tt_tab$near_rms
 
+shapiro.test(dif_beta)
+shapiro.test(dif_exp)
+shapiro.test(dif_rms)
+
+# we can assume normal distribution
+ttest_rms <- t.test(tt_tab$near_rms, tt_tab$far_rms, paired = T, "greater")
+ttest_beta <- t.test(tt_tab$near_beta, tt_tab$far_beta, paired = T, "greater")
+ttest_exp <- t.test(tt_tab$near_exp, tt_tab$far_exp, paired = T, "less")
+### only rms
+
+## correlation matrix ##
+# we can't assume normal distribution for distance or depth
 ggdensity(rg_tab, x = "distance", fill = "lightgray", title = "Distance to target") +
   scale_x_continuous(limits = c(-20, 20)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
-#visualize data
-ggscatter(rg_tab, x = "distance", y = "z_beta", add = "reg.line", 
-          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "distance to STN", ylab = "beta power")
+ggdensity(rg_tab, x = "DEPTH", fill = "lightgray", title = "Depth of electrode") +
+  scale_x_continuous(limits = c(-20, 20)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
 
 # kendall correlation which is non-parametric (spearman has issues with ties)
-H <- cor.test(rg_tab$distance,rg_tab$z_beta, method = "kendall")
-H
-### no significant correlation between beta and distance to STN (nicht sinnvoller Test?!?)
+short <- data.frame(rg_tab$distance, rg_tab$DEPTH, rg_tab$z_exp, rg_tab$z_theta, rg_tab$z_alpha, rg_tab$z_beta, rg_tab$z_rms)
+cortab <- cor(short, method = "kendall")
+cortab
 
-## exploring ##
+#visualize found correlations
+ggscatter(rg_tab, x = "DEPTH", y = "z_exp", add = "reg.line", 
+          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "Depth of electrode", ylab = "aperiodic exponent")
+
+ggscatter(rg_tab, x = "DEPTH", y = "z_rms", add = "reg.line", 
+          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "Depth of electrode", ylab = "root mean square")
+
+ggscatter(rg_tab, x = "distance", y = "z_rms", add = "reg.line", 
+          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "Distance to target", ylab = "root mean square")
+
+### siginificant because of interesting spot at -5
+
 # regression is robust (source), data is close to normal distribution
-full_model_distance <- lme(fixed=distance ~ z_exp + z_theta + z_alpha + z_beta, random=~1|ID, data=rg_tab)
-summary(full_model_distance)
-anova(full_model_distance)
-# only Beta has a significant correlation? Fits the research
-
-full_model_depth <- lme(fixed=DEPTH ~ z_exp + z_theta + z_alpha + z_beta, random=~1|ID, data=rg_tab)
+full_model_depth <- lme(fixed=DEPTH ~ z_exp + z_rms, random=~1|ID, data=rg_tab)
 summary(full_model_depth)
 anova(full_model_depth)
-#aperiodic exponent is significant! 
-ggscatter(rg_tab, x = "DEPTH", y = "z_exp", add = "reg.line", 
-          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "depth of electrode", ylab = "aperiodic exponent")
-#Ein deutlich niedrigerer aperiodischer Exponent bei -5, FALLS 0 die Spitze der Elektrode ist,
-#dann wäre -5 exakt da, wo die Elektrode sich genau im STN befindet (IST DAS SO?)
-# (Theta auch)
-ggscatter(rg_tab, x = "DEPTH", y = "z_theta", add = "reg.line", 
-          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "distance to STN", ylab = "theta power")
+
+m <- lme(fixed=DEPTH ~ z_exp + z_rms + z_beta + z_theta, random=~1|ID, data=rg_tab)
+summary(m)
+anova(m)

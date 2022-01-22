@@ -36,8 +36,9 @@ end
 clear T s;
 
 %% define variables
-% define lower boundary for variance
+% define boundaries for variance
 vlim_l          = 0.001;
+vlim_m          = 0.08;
 
 % empty structures
 data            = [];
@@ -106,6 +107,14 @@ for p = 1:length(patient)
             if (vrc{p,d}(c,1) < vlim_l) || (vrc{p,d}(c,2) < vlim_l) || (vrc{p,d}(c,3) < vlim_l) || (vrc{p,d}(c,4) < vlim_l)             
                 data{d}.trial{1}(c,:) = nan(size(data{d}.trial{1}(c,:)));
                 error{p,d}(c)          = cellstr('artefacts found');
+            end
+            
+            % replace data with nan if variance is greater than 0.08
+            if (vrc{p,d}(c,1) > vlim_m) || (vrc{p,d}(c,2) > vlim_m) || (vrc{p,d}(c,3) > vlim_m) || (vrc{p,d}(c,4) > vlim_m)             
+                if isempty(error{p,d}{1,c})
+                    data{d}.trial{1}(c,:) = nan(size(data{d}.trial{1}(c,:)));
+                    error{p,d}(c)          = cellstr('artefacts found');
+                end
             end
             
             % replace data with nan if there are less than 1280 samplepoints in
@@ -180,7 +189,7 @@ for p = 1:length(patient)
     %% Save in a patient-file
     save([MAIN '02_data' filesep '03_processed' filesep patient(p).name '.mat'],'data','data_FFT','DEPTH','SIDE','TRAJECTORY','TFR','error','fooof_results');
     %% clear for next loop
-    clearvars -except MAIN PATHIN_conv patient vlim_l fooof_results DEPTH label SIDE vrc error m or_freq e samples rmsd 
+    clearvars -except MAIN PATHIN_conv patient vlim_l vlim_m fooof_results DEPTH label SIDE vrc error m or_freq e samples rmsd 
 end
 
 %% Save fooof results

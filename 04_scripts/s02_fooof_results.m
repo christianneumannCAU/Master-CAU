@@ -128,13 +128,38 @@ end
 T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','SAMPLES','AP_EXPONENT','THETA_POWER','ALPHA_POWER','BETA_POWER','root_mean_square'}); 
 clear 'fooof';
 
-% delete Channels with negative powers
+% delete channels with negative powers
 errorcount_3 = 0;
 c = 1;
 while c ~= height(T)
     if (T.THETA_POWER(c) < 0) | (T.ALPHA_POWER(c) < 0) | (T.BETA_POWER(c) < 0)
         T(c,:) = [];
         errorcount_3 = errorcount_3 + 1;
+    else
+        c = c+1;
+    end
+end
+
+% delete channels at depth 10 (starting point of operation, still
+% calibrating)
+errorcount_4 = 0;
+c = 1;
+while c ~= height(T)
+    if str2double(T.DEPTH(c)) == 10 
+        T(c,:) = [];
+        errorcount_4 = errorcount_4 + 1;
+    else
+        c = c+1;
+    end
+end
+
+% delete channels with too big root mean square
+errorcount_5 = 0;
+c = 1;
+while c ~= height(T)
+    if T.root_mean_square(c) > 32 
+        T(c,:) = [];
+        errorcount_5 = errorcount_5 + 1;
     else
         c = c+1;
     end
@@ -158,11 +183,11 @@ for s = 1:numel(nms_ids)
     depth_id{s}     = str2double(T.DEPTH(idx_sub));
     
     target{s,1}     = beta_id{s}(dsearchn(depth_id{s},0));
-    target{s,2}     = beta_id{s}(dsearchn(depth_id{s},8.5));
+    target{s,2}     = beta_id{s}(dsearchn(depth_id{s},10));
     target{s,3}     = exp_id{s}(dsearchn(depth_id{s},0));
-    target{s,4}     = exp_id{s}(dsearchn(depth_id{s},8.5));
+    target{s,4}     = exp_id{s}(dsearchn(depth_id{s},10));
     target{s,5}     = rms_id{s}(dsearchn(depth_id{s},0));
-    target{s,6}     = rms_id{s}(dsearchn(depth_id{s},8.5));
+    target{s,6}     = rms_id{s}(dsearchn(depth_id{s},10));
     
 end
 target_dist_idx = cell2table(target,'VariableNames',{'near_beta','far_beta','near_exp','far_exp','near_rms','far_rms'}); 
