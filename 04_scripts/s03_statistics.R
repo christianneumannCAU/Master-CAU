@@ -195,7 +195,3 @@ ggscatter(rg_tab, x = "distance", y = "z_rms", add = "reg.line",
 full_model_depth <- lme(fixed=DEPTH ~ z_exp + z_rms, random=~1|ID, data=rg_tab)
 summary(full_model_depth)
 anova(full_model_depth)
-
-m <- lme(fixed=DEPTH ~ z_exp + z_rms + z_beta + z_theta, random=~1|ID, data=rg_tab)
-summary(m)
-anova(m)
