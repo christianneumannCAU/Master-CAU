@@ -148,7 +148,7 @@ for p = 1:length(patient)
         cfg             = [];
         cfg.method      = 'mtmconvol'; 
         cfg.output      = 'pow';        % Output parameter
-        cfg.foi         = [2:.05:30];   % Frequency resolution
+        cfg.foi         = [2:.05:35];   % Frequency resolution
         cfg.toi         = [0:.01: 5];   % Temporal resolution
         cfg.t_ftimwin   = 5./cfg.foi;
         cfg.taper       = 'hanning';    % Frequency-Adaptive Smoothing
@@ -169,7 +169,7 @@ for p = 1:length(patient)
         settings                    = []; 
         settings.peak_width_limits  = [0.5 12]; %minimum and maximum widths of etracted peaks
         settings.peak_threshold     = 2; %standard deviation of the aperiodic-removed powerspectrum, above which a data point must pass to be considered a candidate peak
-        f_range                     = [4 30]; %fitting range
+        f_range                     = [4 35]; %fitting range
         return_model                = 1; 
         freqs{d}                    = TFR{d}.freq;
 

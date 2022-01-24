@@ -112,11 +112,15 @@ for p = 1:size(fooof_results,1)
                 % theta Power
                 fooof{x,7} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>5&fooof_results{p,d}(c).freqs<7));
                 % alpha Power
-                fooof{x,8} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<12));
+                fooof{x,8} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<13));
                 % beta Power
-                fooof{x,9} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>12&fooof_results{p,d}(c).freqs<30));
+                fooof{x,9} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<35));
                 % root_mean_square
                 fooof{x,10} = rmsd{p,d}(c);
+                % low beta
+                fooof{x,11} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<20));
+                % high beta
+                fooof{x,12} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>20&fooof_results{p,d}(c).freqs<35));
                 
                 x = x+1;
                 
@@ -125,7 +129,7 @@ for p = 1:size(fooof_results,1)
     end
 end
 
-T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','SAMPLES','AP_EXPONENT','THETA_POWER','ALPHA_POWER','BETA_POWER','root_mean_square'}); 
+T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','SAMPLES','AP_EXPONENT','THETA_POWER','ALPHA_POWER','BETA_POWER','root_mean_square','low_beta','high_beta'}); 
 clear 'fooof';
 
 % delete channels with negative powers
@@ -176,21 +180,36 @@ for s = 1:numel(nms_ids)
     T.z_alpha(idx_sub)      = zscore(T.ALPHA_POWER(idx_sub));
     T.z_beta(idx_sub)       = zscore(T.BETA_POWER(idx_sub));
     T.z_rms(idx_sub)        = zscore(T.root_mean_square(idx_sub));
+    T.z_lbeta(idx_sub)      = zscore(T.low_beta(idx_sub));
+    T.z_hbeta(idx_sub)      = zscore(T.high_beta(idx_sub));
     
-    beta_id{s}      = T.z_beta(idx_sub);
     exp_id{s}       = T.z_exp(idx_sub);
+    theta_id{s}     = T.z_theta(idx_sub);
+    alpha_id{s}     = T.z_alpha(idx_sub);
+    beta_id{s}      = T.z_beta(idx_sub);
     rms_id{s}       = T.z_rms(idx_sub);
+    lbeta_id{s}     = T.z_lbeta(idx_sub);
+    hbeta_id{s}     = T.z_hbeta(idx_sub);
     depth_id{s}     = str2double(T.DEPTH(idx_sub));
     
-    target{s,1}     = beta_id{s}(dsearchn(depth_id{s},0));
-    target{s,2}     = beta_id{s}(dsearchn(depth_id{s},10));
-    target{s,3}     = exp_id{s}(dsearchn(depth_id{s},0));
-    target{s,4}     = exp_id{s}(dsearchn(depth_id{s},10));
-    target{s,5}     = rms_id{s}(dsearchn(depth_id{s},0));
-    target{s,6}     = rms_id{s}(dsearchn(depth_id{s},10));
+    
+    target{s,1}     = exp_id{s}(dsearchn(depth_id{s},0));
+    target{s,2}     = exp_id{s}(dsearchn(depth_id{s},10));
+    target{s,3}     = theta_id{s}(dsearchn(depth_id{s},0));
+    target{s,4}     = theta_id{s}(dsearchn(depth_id{s},10));
+    target{s,5}     = alpha_id{s}(dsearchn(depth_id{s},0));
+    target{s,6}     = alpha_id{s}(dsearchn(depth_id{s},10));
+    target{s,7}     = beta_id{s}(dsearchn(depth_id{s},0));
+    target{s,8}     = beta_id{s}(dsearchn(depth_id{s},10));
+    target{s,9}     = rms_id{s}(dsearchn(depth_id{s},0));
+    target{s,10}    = rms_id{s}(dsearchn(depth_id{s},10));
+    target{s,11}    = lbeta_id{s}(dsearchn(depth_id{s},0));
+    target{s,12}    = lbeta_id{s}(dsearchn(depth_id{s},10));
+    target{s,13}    = hbeta_id{s}(dsearchn(depth_id{s},0));
+    target{s,14}    = hbeta_id{s}(dsearchn(depth_id{s},10));
     
 end
-target_dist_idx = cell2table(target,'VariableNames',{'near_beta','far_beta','near_exp','far_exp','near_rms','far_rms'}); 
+target_dist_idx = cell2table(target,'VariableNames',{'near_exp','far_exp','near_theta','far_theta','near_alpha','far_alpha','near_beta','far_beta','near_rms','far_rms','near_lbeta','far_lbeta','near_hbeta','far_hbeta'}); 
 clear 'target';
 
 %% safe for R 
@@ -203,4 +222,4 @@ vrc = cat(1,vrc{:});
 histogram(vrc,0.00001:0.00098:0.15);
 
 %% cleaning up 
-clear 'c' 'd' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'exp_id' 'nms_ids' 'beta_id' 'depth_id' 'idx_sub' 'rms_id'
+clear 'c' 'd' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'exp_id' 'nms_ids' 'beta_id' 'depth_id' 'idx_sub' 'rms_id' 'theta_id' 'alpha_id' 'hbeta_id' 'lbeta_id'

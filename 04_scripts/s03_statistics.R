@@ -66,7 +66,7 @@ qqnorm(rg_tab$root_mean_square)
 qqline(rg_tab$root_mean_square)
 
 ggdensity(rg_tab, x = "root_mean_square", fill = "lightgray", title = "root_mean_square") +
-  scale_x_continuous(limits = c(-2, 5)) +
+  scale_x_continuous(limits = c(-2, 30)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
 
@@ -150,21 +150,42 @@ ggdensity(rg_tab, x = "l_beta", fill = "lightgray", title = "Beta") +
 ## compare rms, aperiodic exponent and beta near target with far from target
 
 # check normal distribution of difference for paired t-test
-dif_beta <- tt_tab$far_beta - tt_tab$near_beta
 dif_exp <- tt_tab$far_exp - tt_tab$near_exp
+dif_theta <- tt_tab$far_theta - tt_tab$near_theta
+dif_alpha <- tt_tab$far_alpha - tt_tab$near_alpha
+dif_beta <- tt_tab$far_beta - tt_tab$near_beta
 dif_rms <- tt_tab$far_rms - tt_tab$near_rms
 
-shapiro.test(dif_beta)
 shapiro.test(dif_exp)
+shapiro.test(dif_theta)
+shapiro.test(dif_alpha)
+shapiro.test(dif_beta)
 shapiro.test(dif_rms)
 
+
 # we can assume normal distribution
-ttest_rms <- t.test(tt_tab$near_rms, tt_tab$far_rms, paired = T, "greater")
-ttest_beta <- t.test(tt_tab$near_beta, tt_tab$far_beta, paired = T, "greater")
 ttest_exp <- t.test(tt_tab$near_exp, tt_tab$far_exp, paired = T, "less")
+ttest_theta <- t.test(tt_tab$near_theta, tt_tab$far_theta, paired = T, "less")
+ttest_alpha <- t.test(tt_tab$near_alpha, tt_tab$far_alpha, paired = T, "greater")
+ttest_beta <- t.test(tt_tab$near_beta, tt_tab$far_beta, paired = T, "greater")
+ttest_rms <- t.test(tt_tab$near_rms, tt_tab$far_rms, paired = T, "greater")
+
+
 ### only rms
 
-## correlation matrix ##
+# what if we distinct between low and high beta?
+ggdensity(rg_tab, x = "z_lbeta", fill = "lightgray", title = "Low_Beta") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+ggdensity(rg_tab, x = "z_hbeta", fill = "lightgray", title = "High_Beta") +
+  scale_x_continuous(limits = c(-5, 5)) +
+  stat_overlay_normal_density(color = "red", linetype = "dashed")
+
+ttest_lbeta <- t.test(tt_tab$near_lbeta, tt_tab$far_lbeta, paired = T, "greater")
+ttest_hbeta <- t.test(tt_tab$near_hbeta, tt_tab$far_hbeta, paired = T, "greater")
+
+## correlation matrix 
 # we can't assume normal distribution for distance or depth
 ggdensity(rg_tab, x = "distance", fill = "lightgray", title = "Distance to target") +
   scale_x_continuous(limits = c(-20, 20)) +
