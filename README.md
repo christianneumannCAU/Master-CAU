@@ -17,8 +17,10 @@ Senior lead support engineer<br>
 * 00_general_info *(infromation regarding the thesis)*
 * 01_literature *(related papers & presentations)*
 * 02_data *(raw, converted and processed LFPs of PD patients)*
-* 03_exposé *(official document and presentation for university Kiel)*
+* 03_exposé *(official documents and presentations for university Kiel)*
 * 04_scripts *(self-written scripts to read and process data)*
+* 05_figures *(visualizations of Data or other related things)*
+* 06_master_thesis *(official thesis in .docx and .pdf)* 
 * 101_software *(programms to convert, visualize or process data)*
 
 ## Versioning

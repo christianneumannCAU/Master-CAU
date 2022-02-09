@@ -73,7 +73,7 @@ for v = 3:7
     x               = x+1;
 end
 
-%% Plotting Option 1
+%% Plotting Optiion 1
 n = 3; %number of Cycles
 for v = 1:5
     subplot(5,1,v);

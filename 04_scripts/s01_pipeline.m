@@ -1,10 +1,10 @@
 %% Startup
-clear all;  %remove all variables from current workspace
-close all;  %close all plots
-clc;        %clear all text from command window 
+clear all;  % remove all variables from current workspace
+close all;  % close all plots
+clc;        % clear all text from command window 
 
-%add subfolders and initiate fieldtrip (addpath(genpath(MAIN)) is not
-%possible, because fieldtrip needs to be added seperately
+% add subfolders and initiate fieldtrip (addpath(genpath(MAIN)) is not
+% possible, because fieldtrip needs to be added seperately
 MAIN = [fileparts(pwd) '\'];
 addpath(genpath([MAIN '101_software\matlab functions']));
 addpath(genpath([MAIN '02_data\']));
@@ -12,7 +12,7 @@ addpath(genpath([MAIN '04_scripts\']));
 addpath([MAIN '101_software\fieldtrip-20210411\']);
 ft_defaults;
 
-%Change MatLab defaults
+% Change MatLab defaults
 set(0,'defaultfigurecolor',[1 1 1]);
 
 % Go to Folder with data 
@@ -22,23 +22,24 @@ PATHIN_conv = [MAIN '02_data' filesep '01_converted' filesep];
 cd([PATHIN_conv]);
 patient     = dir;
 
-% clean and sort patient structure
-patient([1,2],:) = [];
-for s = 1:length(patient)
+% sort patient structure (patient = dir read the titles of the folders as
+% characters and therefore did not sort them by 1-30 
+patient([1,2],:)    = [];
+for s               = 1:length(patient)
     patient(s).name = str2num(patient(s).name);
 end
 T       = struct2table(patient);
 patient = sortrows(T);
 patient = table2struct(patient);
-for s = 1:length(patient)
+for s   = 1:length(patient)
     patient(s).name = num2str(patient(s).name);
 end
 clear T s;
 
 %% define variables
 % define boundaries for variance
-vlim_l          = 0.001;
-vlim_m          = 0.08;
+vlim_l          = 0.003;
+vlim_m          = 0.075;
 
 % empty structures
 data            = [];
@@ -50,18 +51,18 @@ fooof_results   = [];
 %% loop through every patient
 for p = 1:length(patient)
     
-    cd([PATHIN_conv patient(p).name filesep]); % switch to a patient
-    indat = dir('*.mat');     
-    DEPTH(p,1:length(indat)) = extractBetween({indat.name},'D','F'); % extract Depth from filename
-    SIDE(p,1:length(indat)) = extract({indat.name},1); % extract Side from filename (does not work with Matlab R2018b, use extractBefore)
-    TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3); % extract Trajectory from filename
+    cd([PATHIN_conv patient(p).name filesep]);                          % switch to current patientfolder
+    indat                       = dir('*.mat');     
+    DEPTH(p,1:length(indat))    = extractBetween({indat.name},'D','F'); % extract Depth from filename
+    SIDE(p,1:length(indat))     = extract({indat.name},1);              % extract Side from filename (does not work with Matlab R2018b, use extractBefore)
+    TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3);     % extract Trajectory from filename
     
-    %% loop every file (Depth) in folder for one patient
+    %% loop every file in the current patientfolder 
     for d = 1:length(indat)
         
         % preparing search for errors
         error{p,d}      = cell(1,5);
-        
+
         %% read LFP-data
         cfg         = [];
         cfg.dataset = [PATHIN_conv patient(p).name filesep indat(d).name];
@@ -71,21 +72,21 @@ for p = 1:length(patient)
         
         load(indat(d).name);
         raw{d}      = [];
-        for c = 1:length(data{d}.label)
+        for c       = 1:length(data{d}.label)
             chans{d}(c)     = append('CSPK',extractAfter(data{d}.label(c),4));
             name            = string(chans{d}(c));
             raw{d}(c,:)     = eval(name);
             rmsd{p,d}(c)    = rms(raw{d}(c,:));
         end
 
-        %% downsampling
+        %% downsampling to 512 Hz
         cfg             = [];
         cfg.resamplefs  = 512;
         data{d}         = ft_resampledata(cfg,data{d});
         
-        %% reject trials without data or with artefacts
+        %% reject trials without data, with artefacts or with enough samplepoints
         
-        for c = 1:length(data{d}.label)                 % c = channels
+        for c   = 1:length(data{d}.label)               % c = channels
             mnm = min(data{d}.trial{1,1}(c,:));         % lowest point 
             mxm = max(data{d}.trial{1,1}(c,:));         % hightest point
 
@@ -103,17 +104,17 @@ for p = 1:length(patient)
             vrc{p,d}(c,3) = var(norm_raw{d}(c,ceil(end/2):ceil(end*0.75)));  % third quarter
             vrc{p,d}(c,4) = var(norm_raw{d}(c,ceil(end*0.75):end));          % fourth quarter 
             
-            % replace data with nan if variance is smaller than 0.001
-            if (vrc{p,d}(c,1) < vlim_l) || (vrc{p,d}(c,2) < vlim_l) || (vrc{p,d}(c,3) < vlim_l) || (vrc{p,d}(c,4) < vlim_l)             
+            % replace data with nan if variance is smaller or equal 0.003
+            if (vrc{p,d}(c,1) <= vlim_l) || (vrc{p,d}(c,2) <= vlim_l) || (vrc{p,d}(c,3) <= vlim_l) || (vrc{p,d}(c,4) <= vlim_l)             
                 data{d}.trial{1}(c,:) = nan(size(data{d}.trial{1}(c,:)));
                 error{p,d}(c)          = cellstr('artefacts found');
             end
             
-            % replace data with nan if variance is greater than 0.08
+            % replace data with nan if variance is greater than 0.055
             if (vrc{p,d}(c,1) > vlim_m) || (vrc{p,d}(c,2) > vlim_m) || (vrc{p,d}(c,3) > vlim_m) || (vrc{p,d}(c,4) > vlim_m)             
                 if isempty(error{p,d}{1,c})
-                    data{d}.trial{1}(c,:) = nan(size(data{d}.trial{1}(c,:)));
-                    error{p,d}(c)          = cellstr('artefacts found');
+                    data{d}.trial{1}(c,:)   = nan(size(data{d}.trial{1}(c,:)));
+                    error{p,d}(c)           = cellstr('artefacts found');
                 end
             end
             
@@ -122,24 +123,24 @@ for p = 1:length(patient)
             if length(data{d}.trial{1}) < 1280
                 if isempty(error{p,d}{1,c})
                     data{d}.trial{1}(c,:)   = nan(size(data{d}.trial{1}(c,:)));   
-                    error{p,d}(c)          = cellstr('not enough samplepoints');
+                    error{p,d}(c)           = cellstr('not enough samplepoints');
                 end
             end
         end
         %% FFT
         % preprocessing
         cfg             = [];
-        cfg.demean      = 'yes';    %remove DC offset
+        cfg.demean      = 'yes';    % remove DC offset
         cfg.hpfilter    = 'yes';
-        cfg.hpfreq      = .5;       %high-pass filter, cutting everything under .5 Hz
+        cfg.hpfreq      = .5;       % high-pass filter, cutting everything under .5 Hz
         cfg.hpfilttype  = 'firws';
         cfg.lpfilter    = 'yes';
-        cfg.lpfreq      = 45;       %low-pass filter, cutting everything over 45 Hz
+        cfg.lpfreq      = 45;       % low-pass filter, cutting everything over 45 Hz
         cfg.lpfilttype  = 'firws';
-        cfg.pad         = 'nextpow2'
+        cfg.pad         = 'nextpow2';
 
         try
-            data_FFT{d}             = ft_preprocessing(cfg,data{d}); 
+            data_FFT{d} = ft_preprocessing(cfg,data{d}); 
         catch ME
             continue
         end
@@ -156,20 +157,20 @@ for p = 1:length(patient)
         TFR{d}          = ft_freqanalysis(cfg,data_FFT{d});
         
         % save frequency bins from original spectrum
-        or_freq{p,d}  = TFR{d}.freq;
+        or_freq{p,d}    = TFR{d}.freq;
         
         %% calculate powerspectrum
-        m{p,d}            = mean(TFR{d}.powspctrm,[3],'omitnan'); %avarege powerspectrum over time
+        m{p,d}          = mean(TFR{d}.powspctrm,[3],'omitnan'); % avarege powerspectrum over time
         
         %% FOOOF
-        %make sure, that the version of python in cmd and in matlab match each
-        %other (python 3.8 works optimally, python 3.6 from psychopy or 
-        %python from anaconda does not work)
+        % make sure, that the version of python in cmd and in matlab match each
+        % other (python 3.8 works optimally, python 3.6 from psychopy or 
+        % python from anaconda does not work)
 
         settings                    = []; 
-        settings.peak_width_limits  = [0.5 12]; %minimum and maximum widths of etracted peaks
-        settings.peak_threshold     = 2; %standard deviation of the aperiodic-removed powerspectrum, above which a data point must pass to be considered a candidate peak
-        f_range                     = [4 35]; %fitting range
+        settings.peak_width_limits  = [0.5 12]; % minimum and maximum widths of etracted peaks
+        settings.peak_threshold     = 2;        % standard deviation of the aperiodic-removed powerspectrum, above which a data point must pass to be considered a candidate peak
+        f_range                     = [4 35];   % fitting range
         return_model                = 1; 
         freqs{d}                    = TFR{d}.freq;
 

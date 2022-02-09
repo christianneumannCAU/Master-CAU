@@ -1,11 +1,11 @@
 %% Startup
 
-clear all;  %remove all variables from current workspace
-close all;  %close all plots
-clc;        %clear all text from command window 
+clear all;  % remove all variables from current workspace
+close all;  % close all plots
+clc;        % clear all text from command window 
 
-%add subfolders and initiate fieldtrip (addpath(genpath(MAIN)) is not
-%possible, because fieldtrip needs to be added seperately
+% add subfolders and initiate fieldtrip (addpath(genpath(MAIN)) is not
+% possible, because fieldtrip needs to be added seperately
 MAIN = [fileparts(pwd) '\'];
 addpath(genpath([MAIN '101_software\matlab functions']));
 addpath(genpath([MAIN '02_data\']));
@@ -13,7 +13,7 @@ addpath(genpath([MAIN '04_scripts\']));
 addpath([MAIN '101_software\fieldtrip-20210411\']);
 ft_defaults;
 
-%Change MatLab defaults
+% Change MatLab defaults
 set(0,'defaultfigurecolor',[1 1 1]);
 
 % Go to Folder with fooof_results 
@@ -45,11 +45,11 @@ end
 
 %% delete channels with bad fit
 
-l = 1;
-for p = 1:size(fooof_results,1) % p = patient
-    for d = 1:size(fooof_results,2) % d = depth
-        for c = 1:length(fooof_results{p,d}) % c = channel
-            if isempty(fooof_results{p,d}(c).power_spectrum)
+for p = 1:size(fooof_results,1)                                 % p = patient
+    l = 1;
+    for d = 1:size(fooof_results,2)                             % d = depth
+        for c = 1:length(fooof_results{p,d})                    % c = channel
+            if isempty(fooof_results{p,d}(c).power_spectrum)    %ignore empty cells
                 continue
             else
                 % calculate difference between first power value of original
@@ -62,18 +62,19 @@ for p = 1:size(fooof_results,1) % p = patient
                 neg_m{p,d}(c) = mean(dif_neg{p,d}(dif_neg{p,d}<0));
 
                 % delete suspicious data
-                if dif_pow{p,d}(c) > 0.3|neg_m{p,d}(c) < -0.1
-%                     subplot(size(DEPTH,2),3,l)
-%                     plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).power_spectrum);
-%                     %plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).fooofed_spectrum);
-%                     hold on;
-%                     plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).ap_fit);
+                if dif_pow{p,d}(c) > 0.3 & neg_m{p,d}(c) < -0.15
+                    subplot(5,10,l);
+                    figure(p);
+                    plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).power_spectrum);
+                    %plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).fooofed_spectrum);
+                    hold on;
+                    plot(fooof_results{p,d}(c,:).freqs,fooof_results{p,d}(c).ap_fit);
 %                     str = append(num2str(p),' ',DEPTH{p,d},' ',label{p,d}(c));
 %                     title(str);
 %                     xlabel 'Frequency [Hz]';
 %                     ylabel 'power';
-%                     hold off;
-%                     l = l+1;
+                    hold off;
+                    l = l+1;
                     fooof_results{p,d}(c).aperiodic_params = [];
                     fooof_results{p,d}(c).peak_params = [];
                     fooof_results{p,d}(c).gaussian_params = [];
@@ -89,47 +90,52 @@ for p = 1:size(fooof_results,1) % p = patient
             end
         end
     end
+    clear 'l';
 end
 
-%% create new table for regression
+%% create new table for correlation
 fooof = [];
 x = 1;
 for p = 1:size(fooof_results,1)
-    for d = 1:size(DEPTH,2)
-        for c = 1:length(fooof_results{p,d})
-            if sum(fooof_results{p,d}(c).ap_fit) ~= 0
-                fooof{x,1} = p; %id
-                fooof{x,2} = SIDE{p,d};  
-                fooof{x,3} = DEPTH{p,d}; 
-                fooof{x,4} = label{p,d}(c);                 
-                fooof{x,5} = samples{p,d}(2); %number of samplepoints 
-                fooof{x,6} = fooof_results{p,d}(c).aperiodic_params(2); %Exponent von der aperiodischen Komponente
-                
-                % create powerspectrum without aperiodic component with
-                % fooof 
-                spectrum_wo_ap{x,1} = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
-                
-                % theta Power
-                fooof{x,7} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>5&fooof_results{p,d}(c).freqs<7));
-                % alpha Power
-                fooof{x,8} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<13));
-                % beta Power
-                fooof{x,9} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<35));
-                % root_mean_square
-                fooof{x,10} = rmsd{p,d}(c);
-                % low beta
-                fooof{x,11} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<20));
-                % high beta
-                fooof{x,12} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>20&fooof_results{p,d}(c).freqs<35));
-                
-                x = x+1;
-                
+    for d = 1:size(fooof_results,2)
+        if isempty(fooof_results{p,d})                                      % ignore empty depths
+            continue
+        else
+            for c = 1:length(fooof_results{p,d})
+                if sum(fooof_results{p,d}(c).ap_fit) ~= 0                   % ignore empty channels
+                    fooof{x,1} = p;                                         % id
+                    fooof{x,2} = SIDE{p,d};  
+                    fooof{x,3} = DEPTH{p,d}; 
+                    fooof{x,4} = label{p,d}(c);                             % name of channels                 
+                    fooof{x,5} = samples{p,d}(2);                           % number of samplepoints 
+                    fooof{x,6} = fooof_results{p,d}(c).aperiodic_params(2); % Exponent von der aperiodischen Komponente
+
+                    % create powerspectrum without aperiodic component 
+                    spectrum_wo_ap{x,1} = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
+
+                    % theta Power
+                    fooof{x,7} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>5&fooof_results{p,d}(c).freqs<7));
+                    % alpha Power
+                    fooof{x,8} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<13));
+                    % beta Power
+                    fooof{x,9} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<35));
+                    % root_mean_square
+                    fooof{x,10} = rmsd{p,d}(c);
+                    % low beta
+                    fooof{x,11} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<20));
+                    % high beta
+                    fooof{x,12} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>20&fooof_results{p,d}(c).freqs<35));
+
+                    x = x+1;
+                    
+                end
             end
         end
     end
 end
 
-T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','SAMPLES','AP_EXPONENT','THETA_POWER','ALPHA_POWER','BETA_POWER','root_mean_square','low_beta','high_beta'}); 
+% convert to table
+T = cell2table(fooof,'VariableNames',{'ID','SIDE','DEPTH','CHANNEL','SAMPLES','AP_EXPONENT','THETA_POWER','ALPHA_POWER','BETA_POWER','root_mean_square','low_beta','high_beta'});
 clear 'fooof';
 
 % delete channels with negative powers
@@ -149,7 +155,7 @@ end
 errorcount_4 = 0;
 c = 1;
 while c ~= height(T)
-    if str2double(T.DEPTH(c)) == 10 
+    if str2double(T.DEPTH(c)) >= 10 
         T(c,:) = [];
         errorcount_4 = errorcount_4 + 1;
     else
@@ -157,13 +163,25 @@ while c ~= height(T)
     end
 end
 
-% delete channels with too big root mean square
+% delete channels at depth < -3 (end point)
 errorcount_5 = 0;
+c = 1;
+while c ~= height(T)
+    if str2double(T.DEPTH(c)) < -3 
+        T(c,:) = [];
+        errorcount_5 = errorcount_5 + 1;
+    else
+        c = c+1;
+    end
+end
+
+% delete channels with too big root mean square
+errorcount_6 = 0;
 c = 1;
 while c ~= height(T)
     if T.root_mean_square(c) > 32 
         T(c,:) = [];
-        errorcount_5 = errorcount_5 + 1;
+        errorcount_6 = errorcount_6 + 1;
     else
         c = c+1;
     end
@@ -175,6 +193,7 @@ nms_ids = unique(T.ID); % find all participants
 for s = 1:numel(nms_ids)
     idx_sub = T.ID == nms_ids(s);
     
+    % z-transformations
     T.z_exp(idx_sub)        = zscore(T.AP_EXPONENT(idx_sub));
     T.z_theta(idx_sub)      = zscore(T.THETA_POWER(idx_sub));
     T.z_alpha(idx_sub)      = zscore(T.ALPHA_POWER(idx_sub));
@@ -193,6 +212,7 @@ for s = 1:numel(nms_ids)
     depth_id{s}     = str2double(T.DEPTH(idx_sub));
     
     
+    % create new table with values for every variable near 0 and far from 0
     target{s,1}     = exp_id{s}(dsearchn(depth_id{s},0));
     target{s,2}     = exp_id{s}(dsearchn(depth_id{s},10));
     target{s,3}     = theta_id{s}(dsearchn(depth_id{s},0));
@@ -216,10 +236,8 @@ clear 'target';
 writetable(T,'regression_table.csv');
 writetable(target_dist_idx,'ttest_table.csv');
 
-%% descriptive statistic
-% variance 
-vrc = cat(1,vrc{:});
-histogram(vrc,0.00001:0.00098:0.15);
+%% safe for visual inspection
+save([MAIN '02_data' filesep '04_final' filesep 'T' '.mat'], 'T');
 
 %% cleaning up 
-clear 'c' 'd' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'exp_id' 'nms_ids' 'beta_id' 'depth_id' 'idx_sub' 'rms_id' 'theta_id' 'alpha_id' 'hbeta_id' 'lbeta_id'
+clear 'c' 'd' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'exp_id' 'nms_ids' 'beta_id' 'depth_id' 'idx_sub' 'rms_id' 'theta_id' 'alpha_id' 'hbeta_id' 'lbeta_id' 'neg_m' 'dif_pow'

@@ -1,0 +1,114 @@
+%% Startup
+clear all;  % remove all variables from current workspace
+close all;  % close all plots
+clc;        % clear all text from command window 
+
+% add subfolders and initiate fieldtrip (addpath(genpath(MAIN)) is not
+% possible, because fieldtrip needs to be added seperately
+MAIN = [fileparts(pwd) '\'];
+addpath(genpath([MAIN '101_software\matlab functions']));
+addpath(genpath([MAIN '02_data\']));
+addpath(genpath([MAIN '04_scripts\']));
+addpath([MAIN '101_software\fieldtrip-20210411\']);
+ft_defaults;
+
+% Change MatLab defaults
+set(0,'defaultfigurecolor',[1 1 1]);
+
+% read remaining channels
+PATHIN_conv = [MAIN '02_data' filesep '04_final' filesep];
+cd([PATHIN_conv]);
+load('T.mat');
+load('00_fooof_results.mat')
+
+% Go to Folder with LFP-data 
+%(needs to be in the same folder as the script-folder)
+%(see git for the structure of the folders)
+PATHIN_conv = [MAIN '02_data' filesep '01_converted' filesep];
+cd([PATHIN_conv]);
+patient     = dir;
+
+% sort patient structure (patient = dir read the titles of the folders as
+% characters and therefore did not sort them by 1-30 
+patient([1,2],:)    = [];
+for s               = 1:length(patient)
+    patient(s).name = str2num(patient(s).name);
+end
+O       = struct2table(patient);
+patient = sortrows(O);
+patient = table2struct(patient);
+for s   = 1:length(patient)
+    patient(s).name = num2str(patient(s).name);
+end
+clear O s;
+
+%% switch to patientfolder
+% give p a value according to the patientfolder you want to look at
+
+p                           = 2;   
+cd([PATHIN_conv patient(p).name filesep]);                          % switch to current patientfolder
+indat                       = dir('*.mat');     
+DEPTH(p,1:length(indat))    = extractBetween({indat.name},'D','F'); % extract Depth from filename
+SIDE(p,1:length(indat))     = extract({indat.name},1);              % extract Side from filename (does not work with Matlab R2018b, use extractBefore)
+TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3);     % extract Trajectory from filename
+
+%% read LFP-data
+
+for d = 1:length(indat)
+    cfg         = [];
+    cfg.dataset = [PATHIN_conv patient(p).name filesep indat(d).name];
+    data{p,d}     = ft_preprocessing(cfg);        % read data unfiltered
+end
+
+%% normalize data
+for d   = 1:length(indat)
+    for c   = 1:length(data{p,d}.label)               % c = channels
+                mnm = min(data{p,d}.trial{1,1}(c,:));         % lowest point 
+                mxm = max(data{p,d}.trial{1,1}(c,:));         % hightest point
+
+                % normalize data
+                if mxm - mnm ~= 0
+                    norm_raw{p,d}(c,:) = (data{p,d}.trial{1,1}(c,:) - mnm) / (mxm - mnm);
+                else
+                    norm_raw{p,d}(c,:) = 1;
+                end
+    end
+end
+
+%% plot raw data to inspect artefacts
+
+figure(1);
+for d = 1:size(data,2)
+    if length(norm_raw{p,d}) > 6
+        subplot(10,16,d)
+        plot(data{p,d}.time{1},norm_raw{p,d});
+    else
+        continue
+    end
+end
+
+%% plot remaining channels
+
+figure(2);
+for d = 1:length(indat)
+    subplot(10,16,d)
+    if sum(DEPTH{p,d}==string(T.DEPTH(T.ID == p))) == 0
+        continue
+    else
+        for c = 1:length(data{p,d}.label)
+            if sum(data{p,d}.label(c) == string(T.CHANNEL(DEPTH{p,d}==string(T.DEPTH)))) == 1 & string(T.SIDE(DEPTH{p,d}==string(T.DEPTH))) == SIDE{p,d}
+                plot(data{p,d}.time{1},norm_raw{p,d}(c,:));
+                hold on
+            else
+                continue
+            end
+        end
+        hold off
+    end
+end
+
+%% plot histrogram for all variances
+figure(3);
+% variance 
+% vrc = cat(1,vrc{:});
+% histogram(vrc,0.00001:0.00098:0.15);
