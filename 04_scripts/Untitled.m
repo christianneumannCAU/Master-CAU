@@ -45,7 +45,7 @@ clear O s;
 %% switch to patientfolder
 % give p a value according to the patientfolder you want to look at
 
-p                           = 2;   
+p                           = 1;   
 cd([PATHIN_conv patient(p).name filesep]);                          % switch to current patientfolder
 indat                       = dir('*.mat');     
 DEPTH(p,1:length(indat))    = extractBetween({indat.name},'D','F'); % extract Depth from filename
@@ -60,7 +60,37 @@ for d = 1:length(indat)
     data{p,d}     = ft_preprocessing(cfg);        % read data unfiltered
 end
 
+%% file information
+
+n_chans = 0;
+for p = 1:length(patient)
+    mt = 0;
+    for d = 1:size(rmsd,2)
+        if isempty(rmsd{p,d})
+            mt = mt + 1;
+        else 
+            c_count{p,d} = length(rmsd{p,d});
+            n_chans = n_chans + c_count{p,d}; % how many channels?
+        end
+    end
+    f_count{p,1} = size(rmsd,2) - mt; 
+end
+
+f_count = cell2mat(f_count);
+
+% how many files?
+n_files = sum(f_count);
+% avarage? 
+avg_files = mean(f_count);
+% standard deviation?
+sd_files = std(f_count);
+% least files?
+min_files = min(f_count);
+%most files?
+max_files = max(f_count);
+
 %% normalize data
+p = 1;
 for d   = 1:length(indat)
     for c   = 1:length(data{p,d}.label)               % c = channels
                 mnm = min(data{p,d}.trial{1,1}(c,:));         % lowest point 
@@ -110,5 +140,5 @@ end
 %% plot histrogram for all variances
 figure(3);
 % variance 
-% vrc = cat(1,vrc{:});
-% histogram(vrc,0.00001:0.00098:0.15);
+vrc = cat(1,vrc{:});
+histogram(vrc,0.00001:0.00098:0.15);

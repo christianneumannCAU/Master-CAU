@@ -147,53 +147,52 @@ ggdensity(rg_tab, x = "l_beta", fill = "lightgray", title = "Beta") +
 ### that made it worse
 
 
-## compare rms, aperiodic exponent and beta near target with far from target
+######## H1 #########
+## compare rms and beta near target with far from target
 
 # check normal distribution of difference for paired t-test
-dif_exp <- tt_tab$far_exp - tt_tab$near_exp
-dif_theta <- tt_tab$far_theta - tt_tab$near_theta
-dif_alpha <- tt_tab$far_alpha - tt_tab$near_alpha
 dif_beta <- tt_tab$far_beta - tt_tab$near_beta
 dif_rms <- tt_tab$far_rms - tt_tab$near_rms
 
-shapiro.test(dif_exp)
-shapiro.test(dif_theta)
-shapiro.test(dif_alpha)
 shapiro.test(dif_beta)
 shapiro.test(dif_rms)
 
+# we can assume normal distribution
+ttest_beta <- t.test(tt_tab$near_beta, tt_tab$far_beta, paired = T, "greater")
+ttest_beta
+ttest_rms <- t.test(tt_tab$near_rms, tt_tab$far_rms, paired = T, "greater")
+ttest_rms
+
+######## H2 #########
+## compare aperiodic exponent near target with far from target
+
+# check normal distribution of difference for paired t-test
+dif_exp <- tt_tab$far_exp - tt_tab$near_exp
+
+shapiro.test(dif_exp)
 
 # we can assume normal distribution
-ttest_exp <- t.test(tt_tab$near_exp, tt_tab$far_exp, paired = T, "less")
-ttest_theta <- t.test(tt_tab$near_theta, tt_tab$far_theta, paired = T, "less")
-ttest_alpha <- t.test(tt_tab$near_alpha, tt_tab$far_alpha, paired = T, "greater")
-ttest_beta <- t.test(tt_tab$near_beta, tt_tab$far_beta, paired = T, "greater")
-ttest_rms <- t.test(tt_tab$near_rms, tt_tab$far_rms, paired = T, "greater")
+ttest_exp <- t.test(tt_tab$near_exp, tt_tab$far_exp, paired = T, "two.sided")
+ttest_exp
 
+## correlation between Depth and aperiodic exponent
 
-### only rms
-
-# what if we distinct between low and high beta?
-ggdensity(rg_tab, x = "z_lbeta", fill = "lightgray", title = "Low_Beta") +
-  scale_x_continuous(limits = c(-5, 5)) +
-  stat_overlay_normal_density(color = "red", linetype = "dashed")
-
-ggdensity(rg_tab, x = "z_hbeta", fill = "lightgray", title = "High_Beta") +
-  scale_x_continuous(limits = c(-5, 5)) +
-  stat_overlay_normal_density(color = "red", linetype = "dashed")
-
-ttest_lbeta <- t.test(tt_tab$near_lbeta, tt_tab$far_lbeta, paired = T, "greater")
-ttest_hbeta <- t.test(tt_tab$near_hbeta, tt_tab$far_hbeta, paired = T, "greater")
-
-## correlation matrix 
-# we can't assume normal distribution for distance or depth
-ggdensity(rg_tab, x = "distance", fill = "lightgray", title = "Distance to target") +
-  scale_x_continuous(limits = c(-20, 20)) +
-  stat_overlay_normal_density(color = "red", linetype = "dashed")
-
+# is depth normal distributed?
 ggdensity(rg_tab, x = "DEPTH", fill = "lightgray", title = "Depth of electrode") +
   scale_x_continuous(limits = c(-20, 20)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
+# we can't assume normal distribution for depth -> kendall correlation which is non-parametric
+
+# scatter plot
+ggscatter(rg_tab, x = "DEPTH", y = "z_exp", add = "reg.line", 
+          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "Depth of electrode", ylab = "aperiodic exponent")
+
+# correlation test
+r <- cor.test(rg_tab$DEPTH,rg_tab$z_exp, "two.sided", "kendall")
+r
+
+######## Exploration ######### 
+## correlation matrix
 
 # kendall correlation which is non-parametric (spearman has issues with ties)
 short <- data.frame(rg_tab$distance, rg_tab$DEPTH, rg_tab$z_exp, rg_tab$z_theta, rg_tab$z_alpha, rg_tab$z_beta, rg_tab$z_rms)
@@ -201,18 +200,42 @@ cortab <- cor(short, method = "kendall")
 cortab
 
 #visualize found correlations
-ggscatter(rg_tab, x = "DEPTH", y = "z_exp", add = "reg.line", 
-          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "Depth of electrode", ylab = "aperiodic exponent")
 
 ggscatter(rg_tab, x = "DEPTH", y = "z_rms", add = "reg.line", 
           conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "Depth of electrode", ylab = "root mean square")
 
-ggscatter(rg_tab, x = "distance", y = "z_rms", add = "reg.line", 
-          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "Distance to target", ylab = "root mean square")
+ggscatter(rg_tab, x = "DEPTH", y = "z_theta", add = "reg.line", 
+          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "Depth of electrode", ylab = "theta power")
 
-### siginificant because of interesting spot at -5
+ggscatter(rg_tab, x = "DEPTH", y = "z_alpha", add = "reg.line", 
+          conf.int = T, cor.coef = T, cor.method = "kendall", xlab = "Depth of electrode", ylab = "alpha power")
 
 # regression is robust (source), data is close to normal distribution
-full_model_depth <- lme(fixed=DEPTH ~ z_exp + z_rms, random=~1|ID, data=rg_tab)
+full_model_depth <- lme(fixed=DEPTH ~ z_exp + z_rms + z_alpha + z_theta, random=~1|ID, data=rg_tab)
 summary(full_model_depth)
 anova(full_model_depth)
+
+####### discussion #########
+## t-test for other variables
+# normal distribution?
+
+dif_theta <- tt_tab$far_theta - tt_tab$near_theta
+dif_alpha <- tt_tab$far_alpha - tt_tab$near_alpha
+
+shapiro.test(dif_theta)
+shapiro.test(dif_alpha)
+
+# we can assume normal distribution
+ttest_theta <- t.test(tt_tab$near_theta, tt_tab$far_theta, paired = T, "less")
+ttest_alpha <- t.test(tt_tab$near_alpha, tt_tab$far_alpha, paired = T, "greater")
+
+# what if we distinct between low and high beta?
+# normal distribution?
+dif_lbeta <- tt_tab$far_lbeta - tt_tab$near_lbeta
+dif_hbeta <- tt_tab$far_hbeta - tt_tab$near_hbeta
+
+shapiro.test(dif_lbeta)
+shapiro.test(dif_hbeta)
+
+ttest_lbeta <- t.test(tt_tab$near_lbeta, tt_tab$far_lbeta, paired = T, "greater")
+ttest_hbeta <- t.test(tt_tab$near_hbeta, tt_tab$far_hbeta, paired = T, "greater")

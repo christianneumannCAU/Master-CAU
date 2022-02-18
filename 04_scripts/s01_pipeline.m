@@ -170,7 +170,7 @@ for p = 1:length(patient)
         settings                    = []; 
         settings.peak_width_limits  = [0.5 12]; % minimum and maximum widths of etracted peaks
         settings.peak_threshold     = 2;        % standard deviation of the aperiodic-removed powerspectrum, above which a data point must pass to be considered a candidate peak
-        f_range                     = [4 35];   % fitting range
+        f_range                     = [4 30];   % fitting range
         return_model                = 1; 
         freqs{d}                    = TFR{d}.freq;
 

@@ -36,4 +36,15 @@
 
 ## s03_statistics.R
 
+* visualize data to check normal distribution (aperiodic exponent, root mean square, theta-, alpha- and betapower)
+* visualize z-transformed data to compare
+* visualize log-transformed data (only theta-, alpha- and betapower)
+* paired t-tests for H1 (compare values near 0 with values near 10 for betapower and root mean square)
+* paired t-test and correlation test between Depth and aperiodic exponent for H2
+* paired t-tests for exploration (Theta-, Alpha-, low-beta- and high-betapower)
+* correlation matrix for exploration (Depth, aperiodic exponent, theta-, alpha-, betapower and root mean square
+* visualize found correlations
+
+
+ 
 

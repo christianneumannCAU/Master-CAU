@@ -114,17 +114,17 @@ for p = 1:size(fooof_results,1)
                     spectrum_wo_ap{x,1} = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
 
                     % theta Power
-                    fooof{x,7} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>5&fooof_results{p,d}(c).freqs<7));
+                    fooof{x,7} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=4&fooof_results{p,d}(c).freqs<8));
                     % alpha Power
-                    fooof{x,8} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>7&fooof_results{p,d}(c).freqs<13));
+                    fooof{x,8} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=8&fooof_results{p,d}(c).freqs<13));
                     % beta Power
-                    fooof{x,9} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<35));
+                    fooof{x,9} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=13&fooof_results{p,d}(c).freqs<30));
                     % root_mean_square
                     fooof{x,10} = rmsd{p,d}(c);
                     % low beta
-                    fooof{x,11} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>13&fooof_results{p,d}(c).freqs<20));
+                    fooof{x,11} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=13&fooof_results{p,d}(c).freqs<20));
                     % high beta
-                    fooof{x,12} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>20&fooof_results{p,d}(c).freqs<35));
+                    fooof{x,12} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=20&fooof_results{p,d}(c).freqs<30));
 
                     x = x+1;
                     
