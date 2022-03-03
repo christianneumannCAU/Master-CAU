@@ -29,7 +29,7 @@ cd([PATHIN_conv]);
 patient     = dir;
 
 % sort patient structure (patient = dir read the titles of the folders as
-% characters and therefore did not sort them by 1-30 
+% characters and therefore did not sort them by 1-30) 
 patient([1,2],:)    = [];
 for s               = 1:length(patient)
     patient(s).name = str2num(patient(s).name);
@@ -142,3 +142,60 @@ figure(3);
 % variance 
 vrc = cat(1,vrc{:});
 histogram(vrc,0.00001:0.00098:0.15);
+
+%% plot aperiodic power and powerspectrum for channels near target
+nms_ids = unique(T.ID); % find all participants
+
+for s = 1:numel(nms_ids)
+    idx_sub = T.ID == nms_ids(s);
+    
+    depth_id{s}     = str2double(T.DEPTH(idx_sub));
+     
+    nf_beta{s,1}    = depth_id{s}(dsearchn(depth_id{s},0));
+    nf_beta{s,2}    = depth_id{s}(dsearchn(depth_id{s},10));
+    
+end
+
+nf_beta         = cell2table(nf_beta,'VariableNames',{'near_beta_ID','far_beta_ID'});
+
+figure(4)
+for p = 1:length(patient)
+    for d = 1:size(fooof_results,2)
+        for c = 1:length(fooof_results{p,d})
+            if str2double(DEPTH{p,d}) == depth_id{p}(dsearchn(depth_id{p},0))
+                if isempty(fooof_results{p,d}(c).freqs)
+                    continue
+                elseif isempty(get(subplot(6,5,p), 'children'))
+                    subplot(6,5,p)
+                    plot(fooof_results{p,d}(c).freqs, fooof_results{p,d}(c).power_spectrum)
+                    hold on
+                    plot(fooof_results{p,d}(c).freqs, fooof_results{p,d}(c).ap_fit)
+                    hold off
+                else 
+                    continue
+                end
+            end
+        end
+    end
+end
+
+figure(5)
+for p = 1:length(patient)
+    for d = 1:size(fooof_results,2)
+        for c = 1:length(fooof_results{p,d})
+            if str2double(DEPTH{p,d}) == depth_id{p}(dsearchn(depth_id{p},10))
+                if isempty(fooof_results{p,d}(c).freqs)
+                    continue
+                elseif isempty(get(subplot(6,5,p), 'children'))
+                    subplot(6,5,p)
+                    plot(fooof_results{p,d}(c).freqs, fooof_results{p,d}(c).power_spectrum)
+                    hold on
+                    plot(fooof_results{p,d}(c).freqs, fooof_results{p,d}(c).ap_fit)
+                    hold off
+                else 
+                    continue
+                end
+            end
+        end
+    end
+end

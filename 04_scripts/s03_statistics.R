@@ -7,6 +7,13 @@ library(nlme)
 ## read data ##
 rg_tab <- read.csv("../02_data/04_final/regression_table.csv")
 tt_tab <- read.csv("../02_data/04_final/ttest_table.csv")
+rgd <- read.csv("../02_data/04_final/regression_table_discussion.csv")
+ttd <- read.csv("../02_data/04_final/ttest_table_discussion.csv")
+beta_depth_nf <- read.csv("../02_data/04_final/beta_depth_nf.csv")
+or_beta_depth_nf <- read.csv("../02_data/04_final/or_beta_depth_nf.csv")
+rg_fd <- read.csv("../02_data/04_final/regression_table_fd.csv")
+tt_fd <- read.csv("../02_data/04_final/ttest_table_fd.csv")
+fbeta_id <- read.csv("../02_data/04_final/beta_ID_fd.csv")
 
 ## Add new variable for distance to target (got determined by MRT beforehand - the Depth 0 is the target)##
 rg_tab$distance <- abs(rg_tab$DEPTH)
@@ -215,7 +222,6 @@ full_model_depth <- lme(fixed=DEPTH ~ z_exp + z_rms + z_alpha + z_theta, random=
 summary(full_model_depth)
 anova(full_model_depth)
 
-####### discussion #########
 ## t-test for other variables
 # normal distribution?
 
@@ -226,16 +232,65 @@ shapiro.test(dif_theta)
 shapiro.test(dif_alpha)
 
 # we can assume normal distribution
-ttest_theta <- t.test(tt_tab$near_theta, tt_tab$far_theta, paired = T, "less")
-ttest_alpha <- t.test(tt_tab$near_alpha, tt_tab$far_alpha, paired = T, "greater")
+ttest_theta <- t.test(tt_tab$near_theta, tt_tab$far_theta, paired = T, "greater")
+ttest_theta
+ttest_alpha <- t.test(tt_tab$near_alpha, tt_tab$far_alpha, paired = T, "less")
+ttest_alpha
 
-# what if we distinct between low and high beta?
-# normal distribution?
+####### discussion #########
+
+## correlation between beta and depth but for depth < 4
+cor(rg_tab$DEPTH[rg_tab$DEPTH < 4],rg_tab$z_beta[rg_tab$DEPTH < 4],method =  "kendall")
+
+## t-tests near target vs far target for low-beta and high beta
+# low-beta
 dif_lbeta <- tt_tab$far_lbeta - tt_tab$near_lbeta
-dif_hbeta <- tt_tab$far_hbeta - tt_tab$near_hbeta
-
 shapiro.test(dif_lbeta)
-shapiro.test(dif_hbeta)
-
 ttest_lbeta <- t.test(tt_tab$near_lbeta, tt_tab$far_lbeta, paired = T, "greater")
+ttest_lbeta #not significant
+
+# high-beta
+dif_hbeta <- tt_tab$far_hbeta - tt_tab$near_hbeta
+shapiro.test(dif_hbeta)
 ttest_hbeta <- t.test(tt_tab$near_hbeta, tt_tab$far_hbeta, paired = T, "greater")
+ttest_hbeta # not significant
+
+## correlation between depth and low-beta/ hight-beta
+# low-beta
+cor(rg_tab$DEPTH, rg_tab$z_lbeta, method = "kendall")
+# high-beta
+cor(rg_tab$DEPTH, rg_tab$z_hbeta, method = "kendall")
+
+## same for depth < 4
+# low-beta
+cor(rg_tab$DEPTH[rg_tab$DEPTH < 4], rg_tab$z_lbeta[rg_tab$DEPTH < 4], method = "kendall")
+cor.test(rg_tab$DEPTH[rg_tab$DEPTH < 4], rg_tab$z_lbeta[rg_tab$DEPTH < 4],  "less" ,"kendall")
+# high-beta
+cor(rg_tab$DEPTH[rg_tab$DEPTH < 4], rg_tab$z_hbeta[rg_tab$DEPTH < 4], method = "kendall")
+
+## compare beta near target with far from target again but with original powerspectrum
+# check normal distribution of difference for paired t-test
+dif_beta_d <- ttd$far_beta - ttd$near_beta
+shapiro.test(dif_beta_d)
+# we can assume normal distribution
+ttest_beta_d <- t.test(ttd$near_beta, ttd$far_beta, paired = T, "greater")
+ttest_beta_d #significant
+# compare depth of channels near target for original powerspectrum vs powerspectrum after fooof
+plot(or_beta_depth_nf$near_beta, ttd$near_beta)
+plot(beta_depth_nf$near_beta, tt_tab$near_beta)
+plot(or_beta_depth_nf$far_beta, ttd$far_beta)
+plot(beta_depth_nf$far_beta, tt_tab$far_beta)
+# compare power of channels near target for original powerspectrum vs powerspectrum after fooof
+mean(ttd$near_beta)
+mean(tt_tab$near_beta)
+mean(ttd$far_beta)
+mean(tt_tab$far_beta)
+
+## t-tests near target vs far target for beta without aperiodic component, but without cleaning of data
+dif_fbeta <- tt_fd$far_beta - tt_fd$near_beta
+shapiro.test(dif_fbeta)
+ttest_fbeta <- t.test(tt_fd$near_beta, tt_fd$far_beta, paired = T, "greater")
+ttest_fbeta 
+
+mean(tt_fd$near_beta)
+mean(tt_fd$far_beta)

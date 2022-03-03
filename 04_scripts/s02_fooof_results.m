@@ -219,8 +219,12 @@ for s = 1:numel(nms_ids)
     target{s,4}     = theta_id{s}(dsearchn(depth_id{s},10));
     target{s,5}     = alpha_id{s}(dsearchn(depth_id{s},0));
     target{s,6}     = alpha_id{s}(dsearchn(depth_id{s},10));
+    
+    nf_beta{s,1}    = depth_id{s}(dsearchn(depth_id{s},0));
     target{s,7}     = beta_id{s}(dsearchn(depth_id{s},0));
+    nf_beta{s,2}    = depth_id{s}(dsearchn(depth_id{s},10));
     target{s,8}     = beta_id{s}(dsearchn(depth_id{s},10));
+    
     target{s,9}     = rms_id{s}(dsearchn(depth_id{s},0));
     target{s,10}    = rms_id{s}(dsearchn(depth_id{s},10));
     target{s,11}    = lbeta_id{s}(dsearchn(depth_id{s},0));
@@ -229,15 +233,17 @@ for s = 1:numel(nms_ids)
     target{s,14}    = hbeta_id{s}(dsearchn(depth_id{s},10));
     
 end
-target_dist_idx = cell2table(target,'VariableNames',{'near_exp','far_exp','near_theta','far_theta','near_alpha','far_alpha','near_beta','far_beta','near_rms','far_rms','near_lbeta','far_lbeta','near_hbeta','far_hbeta'}); 
+target_dist_idx = cell2table(target,'VariableNames',{'near_exp','far_exp','near_theta','far_theta','near_alpha','far_alpha','near_beta','far_beta','near_rms','far_rms','near_lbeta','far_lbeta','near_hbeta','far_hbeta'});
+nf_beta         = cell2table(nf_beta,'VariableNames',{'near_beta','far_beta'});
 clear 'target';
 
 %% safe for R 
 writetable(T,'regression_table.csv');
 writetable(target_dist_idx,'ttest_table.csv');
+writetable(nf_beta,'beta_depth_nf.csv');
 
 %% safe for visual inspection
 save([MAIN '02_data' filesep '04_final' filesep 'T' '.mat'], 'T');
 
 %% cleaning up 
-clear 'c' 'd' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'exp_id' 'nms_ids' 'beta_id' 'depth_id' 'idx_sub' 'rms_id' 'theta_id' 'alpha_id' 'hbeta_id' 'lbeta_id' 'neg_m' 'dif_pow'
+clear 'c' 'd' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'nms_ids' 'idx_sub' 'rms_id' 'theta_id' 'alpha_id' 'hbeta_id' 'lbeta_id' 'neg_m' 'dif_pow'
