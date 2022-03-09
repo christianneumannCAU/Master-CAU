@@ -175,8 +175,25 @@ shapiro.test(dif_rms)
 # we can assume normal distribution
 ttest_beta <- t.test(tt_tab$near_beta, tt_tab$far_beta, paired = T, "greater")
 ttest_beta
+#boxplot 
+beta_col1 <- data.frame(tt_tab$near_beta,c(rep('"nah"',30)))
+colnames(beta_col1) <- c("Betapower", "Bedingung")
+beta_col2 <- data.frame(tt_tab$far_beta,c(rep('"fern"',30)))
+colnames(beta_col2) <- c("Betapower", "Bedingung")
+t_beta_plot <- rbind(beta_col1,beta_col2)
+ggplot(t_beta_plot, aes(x=Bedingung, y=Betapower)) + 
+  geom_boxplot() + labs(y = "Betapower (µV)")
+
 ttest_rms <- t.test(tt_tab$near_rms, tt_tab$far_rms, paired = T, "greater")
 ttest_rms
+#boxplot 
+rms_col1 <- data.frame(tt_tab$near_rms,c(rep('"nah"',30)))
+colnames(rms_col1) <- c("Quadratisches_Mittel", "Bedingung")
+rms_col2 <- data.frame(tt_tab$far_rms,c(rep('"fern"',30)))
+colnames(rms_col2) <- c("Quadratisches_Mittel", "Bedingung")
+t_rms_plot <- rbind(rms_col1,rms_col2)
+ggplot(t_rms_plot, aes(x=Bedingung, y=Quadratisches_Mittel)) + 
+  geom_boxplot() + labs(y = "Quadratisches Mittel")
 
 ######## H2 #########
 ## compare aperiodic exponent near target with far from target
@@ -189,6 +206,14 @@ shapiro.test(dif_exp)
 # we can assume normal distribution
 ttest_exp <- t.test(tt_tab$near_exp, tt_tab$far_exp, paired = T, "two.sided")
 ttest_exp
+#boxplot 
+exp_col1 <- data.frame(tt_tab$near_exp,c(rep('"nah"',30)))
+colnames(exp_col1) <- c("Aperiodischer_Exponent", "Bedingung")
+exp_col2 <- data.frame(tt_tab$far_exp,c(rep('"fern"',30)))
+colnames(exp_col2) <- c("Aperiodischer_Exponent", "Bedingung")
+t_exp_plot <- rbind(exp_col1,exp_col2)
+ggplot(t_exp_plot, aes(x=Bedingung, y=Aperiodischer_Exponent)) + 
+  geom_boxplot() + labs(y = "Aperiodischer Exponent")
 
 ## correlation between Depth and aperiodic exponent
 
@@ -245,8 +270,10 @@ shapiro.test(dif_alpha)
 # we can assume normal distribution
 ttest_theta <- t.test(tt_tab$near_theta, tt_tab$far_theta, paired = T, "greater")
 ttest_theta
+
 ttest_alpha <- t.test(tt_tab$near_alpha, tt_tab$far_alpha, paired = T, "less")
 ttest_alpha
+
 
 ####### discussion #########
 
@@ -286,6 +313,16 @@ shapiro.test(dif_beta_d)
 # we can assume normal distribution
 ttest_beta_d <- t.test(ttd$near_beta, ttd$far_beta, paired = T, "greater")
 ttest_beta_d #significant
+
+#boxplot 
+d_beta_col1 <- data.frame(ttd$near_beta,c(rep('"nah"',30)))
+colnames(d_beta_col1) <- c("Betapower", "Bedingung")
+d_beta_col2 <- data.frame(ttd$far_beta,c(rep('"fern"',30)))
+colnames(d_beta_col2) <- c("Betapower", "Bedingung")
+t_d_beta_plot <- rbind(d_beta_col1,d_beta_col2)
+ggplot(t_d_beta_plot, aes(x=Bedingung, y=Betapower)) + 
+  geom_boxplot() + labs(y = "Betapower (µV)")
+
 # compare depth of channels near target for original powerspectrum vs powerspectrum after fooof
 par(mfrow=c(2,2))
 plot(or_beta_depth_nf$near_beta, ttd$near_beta, xlab = 'Tiefe "nah" (mm)', ylab = "Betapower (µV)", main = 'Originales Powerspektrum')
