@@ -5,6 +5,9 @@ library(ggplot2)
 library(ggpubr)
 library(moments)
 library(nlme)
+library(lme4)
+library(lmerTest)
+library(ggeffects)
 
 ## read data ##
 rg_tab <- read.csv("../02_data/04_final/regression_table.csv")
@@ -16,10 +19,6 @@ or_beta_depth_nf <- read.csv("../02_data/04_final/or_beta_depth_nf.csv")
 rg_fd <- read.csv("../02_data/04_final/regression_table_fd.csv")
 tt_fd <- read.csv("../02_data/04_final/ttest_table_fd.csv")
 fbeta_id <- read.csv("../02_data/04_final/beta_ID_fd.csv")
-
-## Add new variable for distance to target (got determined by MRT beforehand - the Depth 0 is the target)##
-rg_tab$distance <- abs(rg_tab$DEPTH)
-
 
 ## Assign data types ##
 rg_tab$ID <- as.factor(rg_tab$ID)
@@ -75,7 +74,7 @@ D <- ggdensity(rg_tab, x = "BETA_POWER", fill = "lightgray", ylab = "Dichte", xl
   scale_x_continuous(limits = c(-0.5, 1)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
-E <- ggdensity(rg_tab, x = "root_mean_square", fill = "lightgray", ylab = "Dichte", xlab = "Quadratisches Mittel") +
+E <- ggdensity(rg_tab, x = "root_mean_square", fill = "lightgray", ylab = "Dichte", xlab = "RMS") +
   scale_x_continuous(limits = c(-2, 30)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
@@ -125,7 +124,7 @@ Dz <- ggdensity(rg_tab, x = "z_beta", fill = "lightgray", ylab = "Dichte", xlab 
   scale_x_continuous(limits = c(-5, 5)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
-Ez <- ggdensity(rg_tab, x = "z_rms", fill = "lightgray", ylab = "Dichte", xlab = "Quadratisches Mittel") +
+Ez <- ggdensity(rg_tab, x = "z_rms", fill = "lightgray", ylab = "Dichte", xlab = "RMS") +
   scale_x_continuous(limits = c(-5, 5)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
@@ -173,6 +172,8 @@ shapiro.test(dif_beta)
 shapiro.test(dif_rms)
 
 # we can assume normal distribution
+
+# H1.1
 ttest_beta <- t.test(tt_tab$near_beta, tt_tab$far_beta, paired = T, "greater")
 ttest_beta
 #boxplot 
@@ -184,18 +185,20 @@ t_beta_plot <- rbind(beta_col1,beta_col2)
 ggplot(t_beta_plot, aes(x=Bedingung, y=Betapower)) + 
   geom_boxplot() + labs(y = "Betapower (µV)")
 
+# H.1.2
 ttest_rms <- t.test(tt_tab$near_rms, tt_tab$far_rms, paired = T, "greater")
 ttest_rms
 #boxplot 
 rms_col1 <- data.frame(tt_tab$near_rms,c(rep('"nah"',30)))
-colnames(rms_col1) <- c("Quadratisches_Mittel", "Bedingung")
+colnames(rms_col1) <- c("RMS", "Bedingung")
 rms_col2 <- data.frame(tt_tab$far_rms,c(rep('"fern"',30)))
-colnames(rms_col2) <- c("Quadratisches_Mittel", "Bedingung")
+colnames(rms_col2) <- c("RMS", "Bedingung")
 t_rms_plot <- rbind(rms_col1,rms_col2)
-ggplot(t_rms_plot, aes(x=Bedingung, y=Quadratisches_Mittel)) + 
-  geom_boxplot() + labs(y = "Quadratisches Mittel")
+ggplot(t_rms_plot, aes(x=Bedingung, y=RMS)) + 
+  geom_boxplot() + labs(y = "RMS")
 
 ######## H2 #########
+
 ## compare aperiodic exponent near target with far from target
 
 # check normal distribution of difference for paired t-test
@@ -204,6 +207,8 @@ dif_exp <- tt_tab$far_exp - tt_tab$near_exp
 shapiro.test(dif_exp)
 
 # we can assume normal distribution
+
+#H2.1
 ttest_exp <- t.test(tt_tab$near_exp, tt_tab$far_exp, paired = T, "two.sided")
 ttest_exp
 #boxplot 
@@ -215,48 +220,58 @@ t_exp_plot <- rbind(exp_col1,exp_col2)
 ggplot(t_exp_plot, aes(x=Bedingung, y=Aperiodischer_Exponent)) + 
   geom_boxplot() + labs(y = "Aperiodischer Exponent")
 
-## correlation between Depth and aperiodic exponent
 
-# is depth normal distributed?
-ggdensity(rg_tab, x = "DEPTH", fill = "lightgray", xlab = "Tiefe (mm)", ylab = "Dichte") +
-  scale_x_continuous(limits = c(-20, 20)) +
-  stat_overlay_normal_density(color = "red", linetype = "dashed")
-# we can't assume normal distribution for depth -> kendall correlation which is non-parametric
+## regression is robust (source), data is close to normal distribution
+# H2.2
 
-# scatter plot
-ggscatter(rg_tab, x = "DEPTH", y = "z_exp", add = "reg.line", 
-          conf.int = T, xlab = "Tiefe (mm)", ylab = "Aperiodischer Exponent")
+h2reg <- lmer(DEPTH ~ 1 + z_exp + (1|ID), data=rg_tab)
+plot(h2reg, which = 1, xlab = "Vorhergesagter Wert für die Tiefe", ylab = "Residuen", main = "Darstellung der Residuen")
+summary(h2reg)
+confint(h2reg)
 
-# correlation test
-r <- cor.test(rg_tab$DEPTH,rg_tab$z_exp, "two.sided", "kendall")
-r
+# Extract the prediction data frame
+pred.mm <- ggpredict(h2reg, terms = c("z_exp"))  # this gives overall predictions for the model
+
+# Plot the predictions 
+
+(ggplot(pred.mm) + 
+    geom_line(aes(x = x, y = predicted)) +          # slope
+    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                fill = "lightgrey", alpha = 0.5) +  # error band
+    geom_point(data = rg_tab,                      # adding the raw data (scaled values)
+               aes(x = z_exp, y = DEPTH, colour = ID)) + 
+    labs(x = "Aperiodischer Exponent", y = "Tiefe der Elektrode (in mm)", 
+         title = "Zusammenhang zwischen Aperiodischem Exponenten und Tiefe der Elektrode") + 
+    theme_minimal())
 
 ######## Exploration ######### 
-## correlation matrix
 
-# kendall correlation which is non-parametric (spearman has issues with ties)
-short <- data.frame(rg_tab$DEPTH, rg_tab$z_exp, rg_tab$z_theta, rg_tab$z_alpha, rg_tab$z_beta, rg_tab$z_rms)
-cortab <- round(cor(short, method = "kendall"),3)
-rownames(cortab) <- c("Tiefe", "Aperiodischer Exponent", "Thetapower", "Alphapower", "Betapower", "Quadratisches Mittel")
-colnames(cortab) <- c("Tiefe", "Aperiodischer Exponent", "Thetapower", "Alphapower", "Betapower", "Quadratisches Mittel")
-cortab
+## regression for every predictor possible (full model)
 
-#visualize found correlations
+full_model <- lmer(DEPTH ~ 1 + z_exp + + z_theta + z_alpha + z_beta + z_rms + (1|ID), data=rg_tab)
+plot(full_model, which = 1, xlab = "Vorhergesagter Wert für die Tiefe", ylab = "Residuen", main = "Darstellung der Residuen")
+summary(full_model)
+confint(full_model)
 
-ggscatter(rg_tab, x = "DEPTH", y = "z_rms", add = "reg.line", 
-          conf.int = T, xlab = "Tiefe (mm)", ylab = "Quadratisches Mittel")
+best_model <- step(full_model)
+print(best_model)
 
-ggscatter(rg_tab, x = "DEPTH", y = "z_theta", add = "reg.line", 
-          conf.int = T, xlab = "Tiefe (mm)", ylab = "Thetapower (µV)")
+best_reg <- lmer(DEPTH ~ 1 + z_rms + (1|ID), data=rg_tab)
 
-ggscatter(rg_tab, x = "DEPTH", y = "z_alpha", add = "reg.line", 
-          conf.int = T, xlab = "Tiefe (mm)", ylab = "Alphapower (µV)")
+# Extract the prediction data frame
+pred.mm <- ggpredict(best_reg, terms = c("z_rms"))  # this gives overall predictions for the model
 
+# Plot the predictions 
 
-# regression is robust (source), data is close to normal distribution
-full_model_depth <- lme(fixed=DEPTH ~ z_exp + z_rms + z_alpha + z_theta, random=~1|ID, data=rg_tab)
-summary(full_model_depth)
-anova(full_model_depth)
+(ggplot(pred.mm) + 
+    geom_line(aes(x = x, y = predicted)) +          # slope
+    geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
+                fill = "lightgrey", alpha = 0.5) +  # error band
+    geom_point(data = rg_tab,                      # adding the raw data (scaled values)
+               aes(x = z_rms, y = DEPTH, colour = ID)) + 
+    labs(x = "RMS", y = "Tiefe der Elektrode (in mm)", 
+         title = "Zusammenhang zwischen RMS und Tiefe der Elektrode") + 
+    theme_minimal())
 
 ## t-test for other variables
 # normal distribution?
@@ -275,11 +290,6 @@ ttest_alpha <- t.test(tt_tab$near_alpha, tt_tab$far_alpha, paired = T, "less")
 ttest_alpha
 
 
-####### discussion #########
-
-## correlation between beta and depth but for depth < 4
-cor(rg_tab$DEPTH[rg_tab$DEPTH < 4],rg_tab$z_beta[rg_tab$DEPTH < 4],method =  "kendall")
-
 ## t-tests near target vs far target for low-beta and high beta
 # low-beta
 dif_lbeta <- tt_tab$far_lbeta - tt_tab$near_lbeta
@@ -292,19 +302,6 @@ dif_hbeta <- tt_tab$far_hbeta - tt_tab$near_hbeta
 shapiro.test(dif_hbeta)
 ttest_hbeta <- t.test(tt_tab$near_hbeta, tt_tab$far_hbeta, paired = T, "greater")
 ttest_hbeta # not significant
-
-## correlation between depth and low-beta/ hight-beta
-# low-beta
-cor(rg_tab$DEPTH, rg_tab$z_lbeta, method = "kendall")
-# high-beta
-cor(rg_tab$DEPTH, rg_tab$z_hbeta, method = "kendall")
-
-## same for depth < 4
-# low-beta
-cor(rg_tab$DEPTH[rg_tab$DEPTH < 4], rg_tab$z_lbeta[rg_tab$DEPTH < 4], method = "kendall")
-cor.test(rg_tab$DEPTH[rg_tab$DEPTH < 4], rg_tab$z_lbeta[rg_tab$DEPTH < 4],  "less" ,"kendall")
-# high-beta
-cor(rg_tab$DEPTH[rg_tab$DEPTH < 4], rg_tab$z_hbeta[rg_tab$DEPTH < 4], method = "kendall")
 
 ## compare beta near target with far from target again but with original powerspectrum
 # check normal distribution of difference for paired t-test
@@ -323,6 +320,8 @@ t_d_beta_plot <- rbind(d_beta_col1,d_beta_col2)
 ggplot(t_d_beta_plot, aes(x=Bedingung, y=Betapower)) + 
   geom_boxplot() + labs(y = "Betapower (µV)")
 
+####### discussion #########
+
 # compare depth of channels near target for original powerspectrum vs powerspectrum after fooof
 par(mfrow=c(2,2))
 plot(or_beta_depth_nf$near_beta, ttd$near_beta, xlab = 'Tiefe "nah" (mm)', ylab = "Betapower (µV)", main = 'Originales Powerspektrum')
@@ -335,11 +334,14 @@ mean(tt_tab$near_beta)
 mean(ttd$far_beta)
 mean(tt_tab$far_beta)
 
-## t-tests near target vs far target for beta without aperiodic component, but without cleaning of data
-dif_fbeta <- tt_fd$far_beta - tt_fd$near_beta
-shapiro.test(dif_fbeta)
-ttest_fbeta <- t.test(tt_fd$near_beta, tt_fd$far_beta, paired = T, "greater")
-ttest_fbeta 
+#boxplot 
+fd_beta_col1 <- data.frame(tt_fd$near_beta,c(rep('"nah"',30)))
+colnames(fd_beta_col1) <- c("Betapower", "Bedingung")
+fd_beta_col2 <- data.frame(tt_fd$far_beta,c(rep('"fern"',30)))
+colnames(fd_beta_col2) <- c("Betapower", "Bedingung")
+t_fd_beta_plot <- rbind(fd_beta_col1,fd_beta_col2)
+ggplot(t_fd_beta_plot, aes(x=Bedingung, y=Betapower)) + 
+  geom_boxplot() + labs(y = "Betapower (µV)")
 
 mean(tt_fd$near_beta)
 mean(tt_fd$far_beta)
