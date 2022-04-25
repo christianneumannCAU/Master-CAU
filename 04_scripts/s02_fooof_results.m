@@ -29,7 +29,7 @@ errorcount_1 = 0;
 errorcount_2 = 0; % for later; counts channel that got deleted because of a bad fit
 for p = 1:size(error,1)
     for d = 1:size(error,2)
-        for c = 1:3
+        for c = 1:5
             if isempty(error{p,d})
                 continue
             else
