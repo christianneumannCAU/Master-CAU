@@ -258,7 +258,7 @@ print(best_model)
 best_reg <- lmer(DEPTH ~ 1 + z_rms + z_theta + (1|ID), data=rg_tab)
 
 # Extract the prediction data frame
-pred.mm <- ggpredict(best_reg, terms = c("z_rms"))  # this gives overall predictions for the model
+pred.mm <- ggpredict(best_reg, terms = c("z_rms","z_theta"))  # this gives overall predictions for the model
 # Plot the predictions 
 (ggplot(pred.mm) + 
     geom_line(aes(x = x, y = predicted)) +          # slope
@@ -266,7 +266,7 @@ pred.mm <- ggpredict(best_reg, terms = c("z_rms"))  # this gives overall predict
                 fill = "lightgrey", alpha = 0.5) +  # error band
     geom_point(data = rg_tab,                      # adding the raw data (scaled values)
                aes(x = z_rms, y = DEPTH, colour = ID)) + 
-    labs(x = "RMS", y = "Tiefe der Elektrode (in mm)") + 
+    labs(x = "RMS + Thetapower", y = "Tiefe der Elektrode (in mm)") + 
     theme_minimal())
 
 ## t-test for other variables
