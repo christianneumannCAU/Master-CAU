@@ -93,7 +93,8 @@ for p = 1:size(fooof_results,1)                                 % p = patient
     clear 'l';
 end
 
-%% create new table for correlation
+%% create new table for correlation/regression
+
 fooof = [];
 x = 1;
 for p = 1:size(fooof_results,1)
@@ -114,11 +115,11 @@ for p = 1:size(fooof_results,1)
                     spectrum_wo_ap{x,1} = fooof_results{p,d}(c).power_spectrum - fooof_results{p,d}(c).ap_fit;
 
                     % theta Power
-                    fooof{x,7} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=4&fooof_results{p,d}(c).freqs<8));
+                    fooof{x,7}  = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=4&fooof_results{p,d}(c).freqs<8));
                     % alpha Power
-                    fooof{x,8} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=8&fooof_results{p,d}(c).freqs<13));
+                    fooof{x,8}  = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=8&fooof_results{p,d}(c).freqs<13));
                     % beta Power
-                    fooof{x,9} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=13&fooof_results{p,d}(c).freqs<30));
+                    fooof{x,9}  = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=13&fooof_results{p,d}(c).freqs<30));
                     % root_mean_square
                     fooof{x,10} = rmsd{p,d}(c);
                     % low beta
@@ -126,7 +127,7 @@ for p = 1:size(fooof_results,1)
                     % high beta
                     fooof{x,12} = mean(spectrum_wo_ap{x,1}(fooof_results{p,d}(c).freqs>=20&fooof_results{p,d}(c).freqs<30));
 
-                    x = x+1;
+                    x           = x + 1;
                     
                 end
             end
@@ -143,10 +144,10 @@ errorcount_3 = 0;
 c = 1;
 while c ~= height(T)
     if (T.THETA_POWER(c) < 0) | (T.ALPHA_POWER(c) < 0) | (T.BETA_POWER(c) < 0)
-        T(c,:) = [];
-        errorcount_3 = errorcount_3 + 1;
+        T(c,:)          = [];
+        errorcount_3    = errorcount_3 + 1;
     else
-        c = c+1;
+        c               = c + 1;
     end
 end
 
@@ -156,10 +157,10 @@ errorcount_4 = 0;
 c = 1;
 while c ~= height(T)
     if str2double(T.DEPTH(c)) >= 10 
-        T(c,:) = [];
-        errorcount_4 = errorcount_4 + 1;
+        T(c,:)          = [];
+        errorcount_4    = errorcount_4 + 1;
     else
-        c = c+1;
+        c               = c + 1;
     end
 end
 
@@ -168,10 +169,10 @@ errorcount_5 = 0;
 c = 1;
 while c ~= height(T)
     if str2double(T.DEPTH(c)) < -3 
-        T(c,:) = [];
-        errorcount_5 = errorcount_5 + 1;
+        T(c,:)          = [];
+        errorcount_5    = errorcount_5 + 1;
     else
-        c = c+1;
+        c               = c + 1;
     end
 end
 
@@ -180,10 +181,10 @@ errorcount_6 = 0;
 c = 1;
 while c ~= height(T)
     if T.root_mean_square(c) > 32 
-        T(c,:) = [];
-        errorcount_6 = errorcount_6 + 1;
+        T(c,:)          = [];
+        errorcount_6    = errorcount_6 + 1;
     else
-        c = c+1;
+        c               = c + 1;
     end
 end
 
@@ -201,7 +202,8 @@ for s = 1:numel(nms_ids)
     T.z_rms(idx_sub)        = zscore(T.root_mean_square(idx_sub));
     T.z_lbeta(idx_sub)      = zscore(T.low_beta(idx_sub));
     T.z_hbeta(idx_sub)      = zscore(T.high_beta(idx_sub));
-    
+
+    % create new table with values for every variable near 0 and far from 0
     exp_id{s}       = T.z_exp(idx_sub);
     theta_id{s}     = T.z_theta(idx_sub);
     alpha_id{s}     = T.z_alpha(idx_sub);
@@ -211,8 +213,6 @@ for s = 1:numel(nms_ids)
     hbeta_id{s}     = T.z_hbeta(idx_sub);
     depth_id{s}     = str2double(T.DEPTH(idx_sub));
     
-    
-    % create new table with values for every variable near 0 and far from 0
     target{s,1}     = exp_id{s}(dsearchn(depth_id{s},0));
     target{s,2}     = exp_id{s}(dsearchn(depth_id{s},10));
     target{s,3}     = theta_id{s}(dsearchn(depth_id{s},0));
@@ -246,4 +246,4 @@ writetable(nf_beta,'beta_depth_nf.csv');
 save([MAIN '02_data' filesep '04_final' filesep 'T' '.mat'], 'T');
 
 %% cleaning up 
-clear 'c' 'd' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'nms_ids' 'idx_sub' 'rms_id' 'theta_id' 'alpha_id' 'hbeta_id' 'lbeta_id' 'neg_m' 'dif_pow'
+clear 'c' 'd' 'dif_neg' 'l' 'label' 'MAIN' 'p' 'PATHIN_conv' 'SIDE' 'str' 'x' 's' 'nms_ids' 'idx_sub' 'rms_id' 'theta_id' 'alpha_id' 'hbeta_id' 'lbeta_id' 'neg_m' 'dif_pow' 'beta_id' 'depth_id' 'exp_id'

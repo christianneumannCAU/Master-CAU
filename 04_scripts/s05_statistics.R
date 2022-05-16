@@ -1,4 +1,5 @@
 ## Set libraries ##
+
 library(grid)
 library(gridExtra)
 library(ggplot2)
@@ -8,24 +9,30 @@ library(nlme)
 library(lme4)
 library(lmerTest)
 library(ggeffects)
+library(jtools)
+
 
 ## read data ##
-rg_tab <- read.csv("../02_data/04_final/regression_table.csv") #data for regression
-tt_tab <- read.csv("../02_data/04_final/ttest_table.csv") #data for t-test
-rg_e <- read.csv("../02_data/04_final/regression_table_exploring.csv") #data for regression but without sorting out channels with a bad fit
-tt_e <- read.csv("../02_data/04_final/ttest_table_exploring.csv") #data for t-test but with original spectrum
+
+rg_tab <- read.csv("../02_data/04_final/regression_table.csv") # data for regression
+tt_tab <- read.csv("../02_data/04_final/ttest_table.csv") # data for t-test
+rg_e <- read.csv("../02_data/04_final/regression_table_exploring.csv") # data for regression but with original spectrum
+tt_e <- read.csv("../02_data/04_final/ttest_table_exploring.csv") # data for t-test but with original spectrum
 beta_depth_nf <- read.csv("../02_data/04_final/beta_depth_nf.csv") # the depths that got chosen for "near" and "far"
 or_beta_depth_nf <- read.csv("../02_data/04_final/or_beta_depth_nf.csv") # the depths that got chosen for "near" and "far" but for original spectrum
-rg_fd <- read.csv("../02_data/04_final/regression_table_wobadfit.csv")
-tt_fd <- read.csv("../02_data/04_final/ttest_table_wobadfit.csv")
+rg_fd <- read.csv("../02_data/04_final/regression_table_wobadfit.csv") # data for regression but without sorting out channels with a bad fit
+tt_fd <- read.csv("../02_data/04_final/ttest_table_wobadfit.csv") # data for t-test but sorting out channels with a bad fit
+
 
 ## Assign data types ##
+
 rg_tab$ID <- as.factor(rg_tab$ID)
 rg_tab$SIDE <- as.factor(rg_tab$SIDE)
 rg_tab$CHANNEL <- as.factor(rg_tab$CHANNEL)
 
 
 ## Test for normal distribution is bad: gets significant automatically with big samplesize ##
+
 shapiro.test(rg_tab$AP_EXPONENT)
 
 
@@ -56,7 +63,7 @@ hist(rg_tab$root_mean_square)
 qqnorm(rg_tab$root_mean_square)
 qqline(rg_tab$root_mean_square)
 
-#density plots for all 5
+# density plots for all 5
 A <- ggdensity(rg_tab, x = "AP_EXPONENT", fill = "lightgray", ylab = "Dichte", xlab = "aperoidischer Exponent") +
   scale_x_continuous(limits = c(-2, 5)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
@@ -78,6 +85,7 @@ E <- ggdensity(rg_tab, x = "root_mean_square", fill = "lightgray", ylab = "Dicht
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 
 ggarrange(A,B,C,D,E,ncol = 2, nrow = 3)
+
 
 ## visualizing z data ##
 
@@ -133,6 +141,7 @@ ggarrange(Az,Bz,Cz,Dz,Ez,ncol = 2, nrow = 3)
 
 
 ## try log-transformation ##
+
 rg_tab$l_theta <- log10(rg_tab$THETA_POWER)
 rg_tab$l_alpha <- log10(rg_tab$ALPHA_POWER)
 rg_tab$l_beta <- log10(rg_tab$BETA_POWER)
@@ -162,13 +171,14 @@ ggarrange(Bl,Cl,Dl,ncol = 2, nrow = 2)
 
 ######## H1 #########
 
-## H1.1 compare beta near target with far from target
+## H1.1 compare beta near target with far from target ##
+
 # check normal distribution of difference for paired t-test
 dif_beta <- tt_tab$far_beta - tt_tab$near_beta
 shapiro.test(dif_beta)
 # we can assume normal distribution
 
-#boxplot 
+# boxplot 
 beta_col1 <- data.frame(tt_tab$near_beta,c(rep('"nah"',max(as.numeric(rg_tab$ID)))))
 colnames(beta_col1) <- c("Betapower", "Bedingung")
 beta_col2 <- data.frame(tt_tab$far_beta,c(rep('"fern"',max(as.numeric(rg_tab$ID)))))
@@ -180,13 +190,14 @@ ggplot(t_beta_plot, aes(x=Bedingung, y=Betapower)) +
 ttest_beta <- t.test(tt_tab$near_beta, tt_tab$far_beta, paired = T, "greater")
 ttest_beta
 
-# H.1.2 compare rms near target with far from target
+## H1.2 compare rms near target with far from target ##
+
 # check normal distribution of difference for paired t-test
 dif_rms <- tt_tab$far_rms - tt_tab$near_rms
 shapiro.test(dif_rms)
 # we can assume normal distribution
 
-#boxplot 
+# boxplot 
 rms_col1 <- data.frame(tt_tab$near_rms,c(rep('"nah"',max(as.numeric(rg_tab$ID)))))
 colnames(rms_col1) <- c("RMS", "Bedingung")
 rms_col2 <- data.frame(tt_tab$far_rms,c(rep('"fern"',max(as.numeric(rg_tab$ID)))))
@@ -200,13 +211,14 @@ ttest_rms
 
 ######## H2 #########
 
-##H2.1 compare aperiodic exponent near target with far from target
+## H2.1 compare aperiodic exponent near target with far from target ##
+
 # check normal distribution of difference for paired t-test
 dif_exp <- tt_tab$far_exp - tt_tab$near_exp
 shapiro.test(dif_exp)
 # we can assume normal distribution
 
-#boxplot 
+# boxplot 
 exp_col1 <- data.frame(tt_tab$near_exp,c(rep('"nah"',max(as.numeric(rg_tab$ID)))))
 colnames(exp_col1) <- c("Aperiodischer_Exponent", "Bedingung")
 exp_col2 <- data.frame(tt_tab$far_exp,c(rep('"fern"',max(as.numeric(rg_tab$ID)))))
@@ -218,19 +230,20 @@ ggplot(t_exp_plot, aes(x=Bedingung, y=Aperiodischer_Exponent)) +
 ttest_exp <- t.test(tt_tab$near_exp, tt_tab$far_exp, paired = T, "less")
 ttest_exp
 
-## H2.2
+## H2.2 regression with linear mixed model to look for correlation between aperiodic exponent and depth of electrode ##
+
 ggdensity(rg_tab, x = "DEPTH", fill = "lightgray", ylab = "Dichte", xlab = "Tiefe der Elektrode (in mm)") +
-  scale_x_continuous(limits = c(-2, 5)) +
+  scale_x_continuous(limits = c(-10, 20)) +
   stat_overlay_normal_density(color = "red", linetype = "dashed")
 # Depth not normaldistribution, but regression is robust (source), data is close to normal distribution
 
-h2reg <- lmer(DEPTH ~ 1 + z_exp + (1|ID), data=rg_tab)
+h2reg <- lmer(DEPTH ~ 1 + z_exp + (1|ID), data=rg_tab) # regression model
 plot(h2reg, which = 1, xlab = "Vorhergesagter Wert für die Tiefe", ylab = "Residuen")
 
 # Extract the prediction data frame
 pred.mm <- ggpredict(h2reg, terms = c("z_exp"))  # this gives overall predictions for the model
 # Plot the predictions 
-(ggplot(pred.mm) + 
+plot <- (ggplot(pred.mm) + 
     geom_line(aes(x = x, y = predicted)) +          # slope
     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                 fill = "lightgrey", alpha = 0.5) +  # error band
@@ -238,13 +251,23 @@ pred.mm <- ggpredict(h2reg, terms = c("z_exp"))  # this gives overall prediction
                aes(x = z_exp, y = DEPTH, colour = ID)) + 
     labs(x = "Aperiodischer Exponent", y = "Tiefe der Elektrode (in mm)") + 
     theme_minimal())
+plot + theme_apa(
+  legend.pos = "right",
+  legend.use.title = FALSE,
+  legend.font.size = 12,
+  x.font.size = 12,
+  y.font.size = 12,
+  facet.title.size = 12,
+  remove.y.gridlines = TRUE,
+  remove.x.gridlines = TRUE
+)
 
-summary(h2reg)
-confint(h2reg)
+summary(h2reg) # show calculated effects
+confint(h2reg) # show confidence intervals
 
 ######## Exploration ######### 
 
-## regression for every predictor possible (full model)
+## regression for every predictor possible (full model) ##
 
 full_model <- lmer(DEPTH ~ 1 + z_exp + z_theta + z_alpha + z_beta + z_rms + (1|ID), data=rg_tab)
 table1 <- summary(full_model)
@@ -252,15 +275,14 @@ table1 <- table1$coefficients
 confint(full_model)
 plot(full_model, which = 1, xlab = "Vorhergesagter Wert für die Tiefe", ylab = "Residuen", main = "Darstellung der Residuen")
 
-best_model <- step(full_model)
-print(best_model)
+best_model <- step(full_model) # calculating the model only including significant variables with the step-down method
+print(best_model) # show results
 
 best_reg <- lmer(DEPTH ~ 1 + z_rms + z_theta + (1|ID), data=rg_tab)
-
 # Extract the prediction data frame
 pred.mm <- ggpredict(best_reg, terms = c("z_rms","z_theta"))  # this gives overall predictions for the model
 # Plot the predictions 
-(ggplot(pred.mm) + 
+plot <- (ggplot(pred.mm) + 
     geom_line(aes(x = x, y = predicted)) +          # slope
     geom_ribbon(aes(x = x, ymin = predicted - std.error, ymax = predicted + std.error), 
                 fill = "lightgrey", alpha = 0.5) +  # error band
@@ -268,10 +290,21 @@ pred.mm <- ggpredict(best_reg, terms = c("z_rms","z_theta"))  # this gives overa
                aes(x = z_rms, y = DEPTH, colour = ID)) + 
     labs(x = "RMS + Thetapower", y = "Tiefe der Elektrode (in mm)") + 
     theme_minimal())
+plot + theme_apa(
+  legend.pos = "right",
+  legend.use.title = FALSE,
+  legend.font.size = 12,
+  x.font.size = 12,
+  y.font.size = 12,
+  facet.title.size = 12,
+  remove.y.gridlines = TRUE,
+  remove.x.gridlines = TRUE
+)
 
-## t-test for other variables
+
+## t-test for other variables ##
+
 # normal distribution?
-
 dif_theta <- tt_tab$far_theta - tt_tab$near_theta
 dif_alpha <- tt_tab$far_alpha - tt_tab$near_alpha
 
@@ -286,7 +319,8 @@ ttest_alpha <- t.test(tt_tab$near_alpha, tt_tab$far_alpha, paired = T, "less")
 ttest_alpha
 
 
-## t-tests near target vs far target for low-beta and high beta
+## t-tests near target vs far target for low-beta and high beta ##
+
 # low-beta
 dif_lbeta <- tt_tab$far_lbeta - tt_tab$near_lbeta
 shapiro.test(dif_lbeta)
@@ -299,13 +333,14 @@ shapiro.test(dif_hbeta)
 ttest_hbeta <- t.test(tt_tab$near_hbeta, tt_tab$far_hbeta, paired = T, "greater")
 ttest_hbeta # not significant
 
-## compare beta near target with far from target again but with original powerspectrum
+## compare beta near target with far from target again but with original powerspectrum ##
+
 # check normal distribution of difference for paired t-test
 dif_beta_e <- tt_e$far_beta - tt_e$near_beta
 shapiro.test(dif_beta_e)
 # we can assume normal distribution
 
-#boxplot 
+# boxplot 
 e_beta_col1 <- data.frame(tt_e$near_beta,c(rep('"nah"',max(as.numeric(rg_tab$ID)))))
 colnames(e_beta_col1) <- c("Betapower", "Bedingung")
 e_beta_col2 <- data.frame(tt_e$far_beta,c(rep('"fern"',max(as.numeric(rg_tab$ID)))))
@@ -315,7 +350,9 @@ ggplot(t_e_beta_plot, aes(x=Bedingung, y=Betapower)) +
   geom_boxplot() + labs(y = "Betapower (µV)")
 
 ttest_beta_e <- t.test(tt_e$near_beta, tt_e$far_beta, paired = T, "greater")
-ttest_beta_e #significant
+ttest_beta_e
+
+
 ####### discussion #########
 
 # compare depth of channels near target for original powerspectrum vs powerspectrum after fooof
@@ -330,7 +367,7 @@ mean(tt_tab$near_beta)
 mean(tt_e$far_beta)
 mean(tt_tab$far_beta)
 
-#boxplot for means when using fooof but without deleting channels with bad fit
+# boxplot for means when using fooof but without deleting channels with bad fit
 fd_beta_col1 <- data.frame(tt_fd$near_beta,c(rep('"nah"',max(as.numeric(rg_tab$ID)))))
 colnames(fd_beta_col1) <- c("Betapower", "Bedingung")
 fd_beta_col2 <- data.frame(tt_fd$far_beta,c(rep('"fern"',max(as.numeric(rg_tab$ID)))))

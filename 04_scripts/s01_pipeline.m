@@ -1,4 +1,5 @@
 %% Startup
+
 clear all;  % remove all variables from current workspace
 close all;  % close all plots
 clc;        % clear all text from command window 
@@ -37,6 +38,7 @@ end
 clear T s;
 
 %% define variables
+
 % define boundaries for variance
 vlim_l          = 0.003;
 vlim_m          = 0.075;
@@ -49,6 +51,7 @@ m               = [];
 fooof_results   = [];
     
 %% loop through every patient
+
 for p = 1:length(patient)
     
     cd([PATHIN_conv patient(p).name filesep]);                          % switch to current patientfolder
@@ -57,13 +60,15 @@ for p = 1:length(patient)
     SIDE(p,1:length(indat))     = extract({indat.name},1);              % extract Side from filename (does not work with Matlab R2018b, use extractBefore)
     TRAJECTORY(1:length(indat)) = extractBetween({indat.name},2,3);     % extract Trajectory from filename
     
-    %% loop every file in the current patientfolder 
+    %% loop every file in the current patientfolder
+    
     for d = 1:length(indat)
         
         % preparing search for errors
-        error{p,d}      = cell(1,5);
+        error{p,d}  = cell(1,5);
 
         %% read LFP-data
+        
         cfg         = [];
         cfg.dataset = [PATHIN_conv patient(p).name filesep indat(d).name];
         data{d}     = ft_preprocessing(cfg);        % read data unfiltered
@@ -80,6 +85,7 @@ for p = 1:length(patient)
         end
 
         %% downsampling to 512 Hz
+        
         cfg             = [];
         cfg.resamplefs  = 512;
         data{d}         = ft_resampledata(cfg,data{d});
@@ -98,7 +104,6 @@ for p = 1:length(patient)
             end
 
             % split data and calculate variance
-
             vrc{p,d}(c,1) = var(norm_raw{d}(c,1:ceil(end/4)));               % first quarter
             vrc{p,d}(c,2) = var(norm_raw{d}(c,ceil(end/4):ceil(end/2)));     % second quarter
             vrc{p,d}(c,3) = var(norm_raw{d}(c,ceil(end/2):ceil(end*0.75)));  % third quarter
@@ -106,8 +111,8 @@ for p = 1:length(patient)
             
             % replace data with nan if variance is smaller or equal 0.003
             if (vrc{p,d}(c,1) <= vlim_l) || (vrc{p,d}(c,2) <= vlim_l) || (vrc{p,d}(c,3) <= vlim_l) || (vrc{p,d}(c,4) <= vlim_l)             
-                data{d}.trial{1}(c,:) = nan(size(data{d}.trial{1}(c,:)));
-                error{p,d}(c)          = cellstr('artefacts found');
+                data{d}.trial{1}(c,:)   = nan(size(data{d}.trial{1}(c,:)));
+                error{p,d}(c)           = cellstr('artefacts found');
             end
             
             % replace data with nan if variance is greater than 0.055

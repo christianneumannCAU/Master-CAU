@@ -1,9 +1,11 @@
 %% Startup
-clear all;  %remove all variables from current workspace
-close all;  %close all plots
-clc;        %clear all text from command window 
 
-%add toolboxes and initiate fieldtrip
+clear all;  % remove all variables from current workspace
+close all;  % close all plots
+clc;        % clear all text from command window 
+
+% add subfolders and initiate fieldtrip (addpath(genpath(MAIN)) is not
+% possible, because fieldtrip needs to be added seperately
 MAIN = [fileparts(pwd) '\'];
 addpath(genpath([MAIN '101_software\matlab functions']));
 addpath(genpath([MAIN '02_data\']));
@@ -11,7 +13,7 @@ addpath(genpath([MAIN '04_scripts\']));
 addpath([MAIN '101_software\fieldtrip-20210411\']);
 ft_defaults;
 
-%Change MatLab defaults
+% Change MatLab defaults
 set(0,'defaultfigurecolor',[1 1 1]);
 
 % Go to Folder with data 
@@ -24,14 +26,14 @@ DEPTH = extractBetween({indat.name},'D','F'); % extract Depth from filename
 
 %% read in the data + preprocessing
 cfg             = [];
-cfg.demean      = 'yes';             %remove DC offset
+cfg.demean      = 'yes';                        %remove DC offset
 cfg.hpfilter    = 'yes';
-cfg.hpfreq      = .5;                %high-pass filter, cutting everything under .5 Hz
+cfg.hpfreq      = .5;                           %high-pass filter, cutting everything under .5 Hz
 cfg.hpfilttype  = 'firws';
 cfg.lpfilter    = 'yes';
-cfg.lpfreq      = 45;                %low-pass filter, cutting everything over 45 Hz
+cfg.lpfreq      = 45;                           %low-pass filter, cutting everything over 45 Hz
 cfg.lpfilttype  = 'firws';
-cfg.dataset     = [PATHIN_conv indat(1).name]; %only the first file
+cfg.dataset     = [PATHIN_conv indat(1).name];  %only the first file
 data            = ft_preprocessing(cfg);
 
 %% Plotting raw data
@@ -62,22 +64,22 @@ end
 
 x = 1;
 for v = 3:7 
-    cfg             =[];
-    cfg.method      ='mtmconvol'; 
-    cfg.output      ='pow'; % Output parameter
-    cfg.foi         =[1:.05:30]; % Frequency resolution
-    cfg.toi         =[0:.01: 5]; % Temporal resolution
+    cfg             = [];
+    cfg.method      = 'mtmconvol'; 
+    cfg.output      = 'pow';        % Output parameter
+    cfg.foi         = [1:.05:30];   % Frequency resolution
+    cfg.toi         = [0:.01: 5];   % Temporal resolution
     cfg.t_ftimwin   = v./cfg.foi;
-    cfg.taper       = 'hanning'; % Frequency-Adaptive Smoothing
-    TFR1(x)         =ft_freqanalysis(cfg,data);
+    cfg.taper       = 'hanning';    % Frequency-Adaptive Smoothing
+    TFR1(x)         = ft_freqanalysis(cfg,data);
     x               = x+1;
 end
 
 %% Plotting Option 1
-n = 3; %number of Cycles
+n = 3;                                          %number of Cycles
 for v = 1:5
     subplot(5,1,v);
-    m = mean(TFR1(v).powspctrm,[3],'omitnan'); %avarege over time
+    m = mean(TFR1(v).powspctrm,[3],'omitnan');  %avarege over time
     
     %normalize data
     for u = 1:2
@@ -89,20 +91,20 @@ for v = 1:5
     title(str) ;
     xlabel 'Frequenz (Hz)';
     ylabel 'Power (µV)';
-    n = n+1;
+    n   = n+1;
 end
 
 %% Option 2: Wavelet
 % Calculating multiple FFTs for a different number of Cycles (3 to 7)
-%to find the best method
+% to find the best method
 
 x = 1;
 for v = 3:7
-    cfg         =[];
-    cfg.method  ='wavelet'; % Method: Wavelet Transformation
-    cfg.output  ='pow'; % Output parameter
-    cfg.foilim  =[1 30]; % Frequency resolution
-    cfg.toi     =[0:.01: 5]; % Temporal resolution
+    cfg         = [];
+    cfg.method  = 'wavelet';    % Method: Wavelet Transformation
+    cfg.output  = 'pow';        % Output parameter
+    cfg.foilim  = [1 30];       % Frequency resolution
+    cfg.toi     = [0:.01: 5];   % Temporal resolution
     cfg.width   = v;
     TFR2(x)     = ft_freqanalysis(cfg,data);
     x           = x+1;

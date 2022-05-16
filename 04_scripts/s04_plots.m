@@ -144,7 +144,7 @@ vrc = cat(1,vrc{:});
 histogram(vrc,0.00001:0.00098:0.15);
 xlabel('Varianz');
 
-%% plot aperiodic power and powerspectrum for channels near target
+%% plot aperiodic component and powerspectrum for channels near target and far from target
 nms_ids = unique(T.ID); % find all participants
 
 for s = 1:numel(nms_ids)
