@@ -47,13 +47,13 @@
 
 * T (saved in regression_table.csv and T.mat): table with ID, Side, Depth, Channel, samples, aperiodic exponent, thetapower, alphapower, betapower, low-betapower, high-betapower, root mean squared and z-transformation of electrophysiolical variables (aperiodic exponent, thetapower, alphapower, betapower, low-betapower, high-betapower, root mean squared) 
 * target_dist_idx (saved in ttest_table.csv): values near target (closest to 0) and far away from target (closest to 10) for every electrophysiolical variable (aperiodic exponent, thetapower, alphapower, betapower, low-betapower, high-betapower, root mean squared)
-* nf_beta (saved in beta_depth_nf): depth of the channels that were chosen for betapower near target and far away from target 
+* nf_beta (saved in beta_depth_nf.csv): depth of the channels that were chosen for betapower near target and far away from target 
 
 ## Output from s03_exploration in 04_final
 
 * T (saved in regression_table_exploring.csv): table with ID, Side, Depth, Channel, samples, aperiodic exponent, thetapower, alphapower, betapower, low-betapower, high-betapower, root mean squared and z-transformation of electrophysiolical variables (aperiodic exponent, thetapower, alphapower, betapower, low-betapower, high-betapower, root mean squared) but without using FOOOF
 * target_dist_idx (saved in ttest_table_exploring.csv): values near target (closest to 0) and far away from target (closest to 10) for every electrophysiolical variable (aperiodic exponent, thetapower, alphapower, betapower, low-betapower, high-betapower, root mean squared) but without using FOOOF
-* nf_beta (saved in or_beta_depth_nf): depth of the channels that were chosen for betapower near target and far away from target but without using FOOOF
+* nf_beta (saved in or_beta_depth_nf.csv): depth of the channels that were chosen for betapower near target and far away from target but without using FOOOF
 
 ## Output from s06_discussion in 04_final
 
